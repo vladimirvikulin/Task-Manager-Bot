@@ -7,6 +7,7 @@ const {
 } = require('telegraf');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const { connectDatabase, users } = require('./db.js');
+const myConsts = require('./consts');
 connectDatabase();
 let obj;
 let tasksList;
@@ -17,6 +18,8 @@ bot.start(async (ctx) => {
   obj = await users.findOne({ chatId: String(ctx.chat.id) });
   tasksList = obj.tasks;
 });
+
+bot.help((ctx) => ctx.reply(myConsts.commands));
 
 bot.launch();
 
