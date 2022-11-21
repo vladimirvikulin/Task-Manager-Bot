@@ -12,6 +12,8 @@ connectDatabase();
 let obj;
 let tasksList;
 let taskText;
+let taskId;
+let action = '';
 bot.start(async (ctx) => {
   await ctx.reply(`Привет ${ctx.message.from.first_name}, этот бот создан для планировки задач.\nНапиши команду /help, чтобы узнать команды бота.`);
   const userExists = await users.findOne({ username: ctx.message.from.username });
@@ -54,6 +56,7 @@ async function addTask(ctx) {
   await ctx.reply('Напишите задачу');
   bot.hears(/\D/, async (ctx) => {
     taskText = ctx.message.text;
+    action = 'add';
     await ctx.replyWithHTML(
       'Вы действительно хотите добавить задачу:\n\n' +
         `<i>${ctx.message.text}</i>`,
@@ -91,17 +94,13 @@ async function deleteTask(ctx) {
     'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу 5'
   );
   bot.hears(/[0-9]/, async (ctx) => {
-    const taskId = Number(ctx.message.text) - 1;
-    tasksList.splice(taskId, 1);
-    users.updateOne(
-      { chatId: String(ctx.chat.id) },
-      {
-        $set: {
-          tasks: tasksList
-        }
-      }
+    taskId = Number(ctx.message.text) - 1;
+    action = 'delete';
+    await ctx.replyWithHTML(
+      'Вы действительно хотите удалить задачу №' +
+      `<i>${taskId + 1}</i>`,
+      yesNoKeyboard()
     );
-    await ctx.reply('Ваша задача успешно удалена');
   });
 }
 
@@ -114,7 +113,7 @@ function yesNoKeyboard() {
 
 bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
-  if (ctx.callbackQuery.data === 'yes') {
+  if (ctx.callbackQuery.data === 'yes' && action === 'add') {
     await tasksList.push(taskText);
     await users.updateOne(
       { chatId: String(ctx.chat.id) },
@@ -125,6 +124,17 @@ bot.action(['yes', 'no'], async (ctx) => {
       }
     );
     await ctx.editMessageText('Ваша задача успешно добавлена');
+  } else if (ctx.callbackQuery.data === 'yes' && action === 'delete') {
+    tasksList.splice(taskId, 1);
+    users.updateOne(
+      { chatId: String(ctx.chat.id) },
+      {
+        $set: {
+          tasks: tasksList
+        }
+      }
+    );
+    await ctx.editMessageText('Ваша задача успешно удалена');
   } else {
     await ctx.deleteMessage();
   }
