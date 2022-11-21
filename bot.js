@@ -36,6 +36,14 @@ bot.command('myTasks', async (ctx) => {
   }
 });
 
+bot.command('deleteTask', async (ctx) => {
+  try {
+    await deleteTask(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 async function addTask(ctx) {
   obj = await users.findOne({ chatId: String(ctx.chat.id) });
   tasksList = obj.tasks;
@@ -72,6 +80,27 @@ async function myTasks(ctx) {
       `${result}`
     );
   }
+}
+
+async function deleteTask(ctx) {
+  obj = await users.findOne({ chatId: String(ctx.chat.id) });
+  tasksList = obj.tasks;
+  await ctx.replyWithHTML(
+    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу 5'
+  );
+  bot.hears(/[0-9]/, async (ctx) => {
+    const taskId = Number(ctx.message.text) - 1;
+    tasksList.splice(taskId, 1);
+    users.updateOne(
+      { chatId: String(ctx.chat.id) },
+      {
+        $set: {
+          tasks: tasksList
+        }
+      }
+    );
+    await ctx.reply('Ваша задача успешно удалена');
+  });
 }
 
 function yesNoKeyboard() {
