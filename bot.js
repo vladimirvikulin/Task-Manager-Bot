@@ -44,9 +44,13 @@ bot.command('deleteTask', async (ctx) => {
   }
 });
 
-async function addTask(ctx) {
+async function updateData(ctx) {
   obj = await users.findOne({ chatId: String(ctx.chat.id) });
   tasksList = obj.tasks;
+}
+
+async function addTask(ctx) {
+  updateData(ctx);
   await ctx.reply('Напишите задачу');
   bot.hears(/\D/, async (ctx) => {
     taskText = ctx.message.text;
@@ -59,8 +63,7 @@ async function addTask(ctx) {
 }
 
 async function myTasks(ctx) {
-  obj = await users.findOne({ chatId: String(ctx.chat.id) });
-  tasksList = obj.tasks;
+  updateData(ctx);
   const tasks = await new Promise((resolve) => {
     setTimeout(() => {
       resolve(tasksList);
@@ -83,8 +86,7 @@ async function myTasks(ctx) {
 }
 
 async function deleteTask(ctx) {
-  obj = await users.findOne({ chatId: String(ctx.chat.id) });
-  tasksList = obj.tasks;
+  updateData(ctx);
   await ctx.replyWithHTML(
     'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу 5'
   );
