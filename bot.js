@@ -28,6 +28,14 @@ bot.command('addTask', async (ctx) => {
   }
 });
 
+bot.command('myTasks', async (ctx) => {
+  try {
+    await myTasks(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 async function addTask(ctx) {
   obj = await users.findOne({ chatId: String(ctx.chat.id) });
   tasksList = obj.tasks;
@@ -40,6 +48,30 @@ async function addTask(ctx) {
       yesNoKeyboard()
     );
   });
+}
+
+async function myTasks(ctx) {
+  obj = await users.findOne({ chatId: String(ctx.chat.id) });
+  tasksList = obj.tasks;
+  const tasks = await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(tasksList);
+    }, 300);
+  });
+  let result = '';
+  for (let i = 0; i < tasks.length; i++) {
+    result += `${i + 1}. ${tasks[i]}\n`;
+  }
+  if (result === '') {
+    ctx.replyWithHTML(
+      '<b>Список ваших задач пуст</b>'
+    );
+  } else {
+    ctx.replyWithHTML(
+      '<b>Список ваших задач:</b>\n\n' +
+      `${result}`
+    );
+  }
 }
 
 function yesNoKeyboard() {
