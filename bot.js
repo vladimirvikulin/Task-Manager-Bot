@@ -168,6 +168,15 @@ bot.action('btn_2', async (ctx) => {
   }
 });
 
+bot.action('btn_3', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    deleteTask(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.launch();
 
 // Enable graceful stop
