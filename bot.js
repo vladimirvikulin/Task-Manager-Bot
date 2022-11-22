@@ -150,6 +150,15 @@ bot.command('menu', async (ctx) => {
   ));
 });
 
+bot.action('btn_1', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await myTasks(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.launch();
 
 // Enable graceful stop
