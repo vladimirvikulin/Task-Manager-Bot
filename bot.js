@@ -159,6 +159,15 @@ bot.action('btn_1', async (ctx) => {
   }
 });
 
+bot.action('btn_2', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    addTask(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.launch();
 
 // Enable graceful stop
