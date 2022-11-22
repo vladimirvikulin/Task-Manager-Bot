@@ -140,6 +140,16 @@ bot.action(['yes', 'no'], async (ctx) => {
   }
 });
 
+bot.command('menu', async (ctx) => {
+  await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
+    [
+      [Markup.button.callback('Мои задачи', 'btn_1')],
+      [Markup.button.callback('Добавить задачу', 'btn_2')],
+      [Markup.button.callback('Удалить задачу', 'btn_3')],
+    ]
+  ));
+});
+
 bot.launch();
 
 // Enable graceful stop
