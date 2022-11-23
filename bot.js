@@ -52,6 +52,14 @@ bot.command('deleteTask', async (ctx) => {
   }
 });
 
+bot.command('updateTask', async (ctx) => {
+  try {
+    await isCompleted(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 async function updateData(ctx) {
   objDataBase = await users.findOne({ chatId: String(ctx.chat.id) });
   userTask.list = objDataBase.tasks;
