@@ -80,7 +80,7 @@ async function myTasks(ctx) {
   });
   let result = '';
   for (let i = 0; i < tasks.length; i++) {
-    if (tasks[i].isCompleted)  result += `${i + 1}. ${tasks[i].taskName} ✔️\n`;
+    if (tasks[i].isCompleted)  result += `${i + 1}. ${tasks[i].taskName} ✅\n`;
     else result += `${i + 1}. ${tasks[i].taskName} 🔴\n`;
   }
   if (result === '') {
@@ -105,6 +105,22 @@ async function deleteTask(ctx) {
     action = 'delete';
     await ctx.replyWithHTML(
       'Вы действительно хотите удалить задачу №' +
+      `<i>${userTask.id + 1}</i>`,
+      yesNoKeyboard()
+    );
+  });
+}
+
+async function isCompleted(ctx) {
+  updateData(ctx);
+  await ctx.replyWithHTML(
+    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы установить или убрать отметку готовности задачи №5'
+  );
+  bot.hears(/[0-9]/, async (ctx) => {
+    userTask.id = Number(ctx.message.text) - 1;
+    action = 'isComleted';
+    await ctx.replyWithHTML(
+      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
       `<i>${userTask.id + 1}</i>`,
       yesNoKeyboard()
     );
