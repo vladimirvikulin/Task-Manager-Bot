@@ -149,14 +149,14 @@ bot.action(['yes', 'no'], async (ctx) => {
 bot.command('menu', async (ctx) => {
   await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
     [
-      [Markup.button.callback('Мои задачи', 'btn_1')],
-      [Markup.button.callback('Добавить задачу', 'btn_2')],
-      [Markup.button.callback('Удалить задачу', 'btn_3')],
+      [Markup.button.callback('Мои задачи', 'myTasks')],
+      [Markup.button.callback('Добавить задачу', 'addTask')],
+      [Markup.button.callback('Удалить задачу', 'deleteTask')],
     ]
   ));
 });
 
-bot.action('btn_1', async (ctx) => {
+bot.action('myTasks', async (ctx) => {
   try {
     await ctx.answerCbQuery();
     await myTasks(ctx);
@@ -165,7 +165,7 @@ bot.action('btn_1', async (ctx) => {
   }
 });
 
-bot.action('btn_2', async (ctx) => {
+bot.action('addTask', async (ctx) => {
   try {
     await ctx.answerCbQuery();
     await addTask(ctx);
@@ -174,7 +174,7 @@ bot.action('btn_2', async (ctx) => {
   }
 });
 
-bot.action('btn_3', async (ctx) => {
+bot.action('deleteTask', async (ctx) => {
   try {
     await ctx.answerCbQuery();
     await deleteTask(ctx);
