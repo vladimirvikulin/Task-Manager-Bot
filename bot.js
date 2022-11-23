@@ -158,6 +158,17 @@ bot.action(['yes', 'no'], async (ctx) => {
       }
     );
     await ctx.editMessageText('Ваша задача успешно удалена');
+  } else if (ctx.callbackQuery.data === 'yes' && action === 'isComleted') {
+    userTask.list[userTask.id].isCompleted = !userTask.list[userTask.id].isCompleted;
+    users.updateOne(
+      { chatId: String(ctx.chat.id) },
+      {
+        $set: {
+          tasks: userTask.list
+        }
+      }
+    );
+    await ctx.editMessageText('Статус вашей задачи успешно обновлен');
   } else {
     await ctx.deleteMessage();
   }
