@@ -80,7 +80,8 @@ async function myTasks(ctx) {
   });
   let result = '';
   for (let i = 0; i < tasks.length; i++) {
-    result += `${i + 1}. ${tasks[i].taskName}\n`;
+    if (tasks[i].isCompleted)  result += `${i + 1}. ${tasks[i].taskName} ✔️\n`;
+    else result += `${i + 1}. ${tasks[i].taskName} 🔴\n`;
   }
   if (result === '') {
     ctx.replyWithHTML(
@@ -120,7 +121,7 @@ function yesNoKeyboard() {
 bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
   if (ctx.callbackQuery.data === 'yes' && action === 'add') {
-    userTask.list.push({ taskName: userTask.text });
+    userTask.list.push({ taskName: userTask.text, isCompleted: false });
     await users.updateOne(
       { chatId: String(ctx.chat.id) },
       {
