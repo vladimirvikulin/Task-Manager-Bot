@@ -86,19 +86,19 @@ bot.on('text', async (ctx) => {
   }
 });
 
-async function updateData(ctx) {
+async function updateLocalData(ctx) {
   objDataBase = await users.findOne({ chatId: String(ctx.chat.id) });
   userTask.list = objDataBase.tasks;
 }
 
 async function addTask(ctx) {
-  updateData(ctx);
+  updateLocalData(ctx);
   await ctx.reply('Напишите задачу');
   action = 'add';
 }
 
 async function myTasks(ctx) {
-  updateData(ctx);
+  updateLocalData(ctx);
   const tasks = await new Promise((resolve) => {
     setTimeout(() => {
       resolve(userTask.list);
@@ -122,7 +122,7 @@ async function myTasks(ctx) {
 }
 
 async function deleteTask(ctx) {
-  updateData(ctx);
+  updateLocalData(ctx);
   await ctx.replyWithHTML(
     'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу №5'
   );
@@ -130,7 +130,7 @@ async function deleteTask(ctx) {
 }
 
 async function isCompleted(ctx) {
-  updateData(ctx);
+  updateLocalData(ctx);
   await ctx.replyWithHTML(
     'Введите порядковый номер задачи, например <b> "5" </b>,чтобы обновить статус задачи №5'
   );
@@ -156,6 +156,7 @@ bot.action(['yes', 'no'], async (ctx) => {
         }
       }
     );
+    action = '';
     await ctx.editMessageText('Ваша задача успешно добавлена');
   } else if (ctx.callbackQuery.data === 'yes' && action === 'delete') {
     userTask.list.splice(userTask.id, 1);
@@ -167,6 +168,7 @@ bot.action(['yes', 'no'], async (ctx) => {
         }
       }
     );
+    action = '';
     await ctx.editMessageText('Ваша задача успешно удалена');
   } else if (ctx.callbackQuery.data === 'yes' && action === 'isCompleted') {
     userTask.list[userTask.id].isCompleted = !userTask.list[userTask.id].isCompleted;
@@ -178,6 +180,7 @@ bot.action(['yes', 'no'], async (ctx) => {
         }
       }
     );
+    action = '';
     await ctx.editMessageText('Статус вашей задачи успешно обновлен');
   } else {
     await ctx.deleteMessage();
