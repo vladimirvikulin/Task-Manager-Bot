@@ -159,43 +159,18 @@ bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
   if (ctx.callbackQuery.data === 'yes' && action === 'add') {
     userTask.list.push({ taskName: userTask.text, isCompleted: false });
-    await users.updateOne(
-      { chatId: String(ctx.chat.id) },
-      {
-        $set: {
-          tasks: userTask.list
-        }
-      }
-    );
-    action = '';
     await ctx.editMessageText('Ваша задача успешно добавлена');
   } else if (ctx.callbackQuery.data === 'yes' && action === 'delete') {
     userTask.list.splice(userTask.id, 1);
-    users.updateOne(
-      { chatId: String(ctx.chat.id) },
-      {
-        $set: {
-          tasks: userTask.list
-        }
-      }
-    );
-    action = '';
     await ctx.editMessageText('Ваша задача успешно удалена');
   } else if (ctx.callbackQuery.data === 'yes' && action === 'isCompleted') {
     userTask.list[userTask.id].isCompleted = !userTask.list[userTask.id].isCompleted;
-    users.updateOne(
-      { chatId: String(ctx.chat.id) },
-      {
-        $set: {
-          tasks: userTask.list
-        }
-      }
-    );
-    action = '';
     await ctx.editMessageText('Статус вашей задачи успешно обновлен');
   } else {
     await ctx.deleteMessage();
   }
+  updateDataBase(ctx);
+  action = '';
 });
 
 bot.command('menu', async (ctx) => {
