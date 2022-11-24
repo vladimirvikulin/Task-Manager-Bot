@@ -60,6 +60,16 @@ bot.command('updateTask', async (ctx) => {
   }
 });
 
+bot.command('menu', async (ctx) => {
+  await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
+    [
+      [Markup.button.callback('Мои задачи', 'myTasks')],
+      [Markup.button.callback('Добавить задачу', 'addTask')],
+      [Markup.button.callback('Удалить задачу', 'deleteTask')],
+    ]
+  ));
+});
+
 bot.on('text', async (ctx) => {
   userTask.text = ctx.message.text;
   userTask.id = Number(ctx.message.text) - 1;
@@ -171,16 +181,6 @@ bot.action(['yes', 'no'], async (ctx) => {
   }
   updateDataBase(ctx);
   action = '';
-});
-
-bot.command('menu', async (ctx) => {
-  await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
-    [
-      [Markup.button.callback('Мои задачи', 'myTasks')],
-      [Markup.button.callback('Добавить задачу', 'addTask')],
-      [Markup.button.callback('Удалить задачу', 'deleteTask')],
-    ]
-  ));
 });
 
 bot.action('myTasks', async (ctx) => {
