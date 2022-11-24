@@ -60,6 +60,32 @@ bot.command('updateTask', async (ctx) => {
   }
 });
 
+bot.on('text', async (ctx) => {
+  userTask.text = ctx.message.text;
+  userTask.id = Number(ctx.message.text) - 1;
+  if (action === 'add') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите добавить задачу:\n\n' +
+        `<i>${ctx.message.text}</i>`,
+      yesNoKeyboard()
+    );
+  } else if (action === 'delete') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите удалить задачу №' +
+      `<i>${userTask.id + 1}</i>`,
+      yesNoKeyboard()
+    );
+  } else if (action === 'isCompleted') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
+      `<i>${userTask.id + 1}</i>`,
+      yesNoKeyboard()
+    );
+  } else {
+    await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
+  }
+});
+
 async function updateData(ctx) {
   objDataBase = await users.findOne({ chatId: String(ctx.chat.id) });
   userTask.list = objDataBase.tasks;
@@ -68,15 +94,7 @@ async function updateData(ctx) {
 async function addTask(ctx) {
   updateData(ctx);
   await ctx.reply('Напишите задачу');
-  bot.hears(/\D/, async (ctx) => {
-    userTask.text = ctx.message.text;
-    action = 'add';
-    await ctx.replyWithHTML(
-      'Вы действительно хотите добавить задачу:\n\n' +
-        `<i>${ctx.message.text}</i>`,
-      yesNoKeyboard()
-    );
-  });
+  action = 'add';
 }
 
 async function myTasks(ctx) {
@@ -106,33 +124,17 @@ async function myTasks(ctx) {
 async function deleteTask(ctx) {
   updateData(ctx);
   await ctx.replyWithHTML(
-    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу 5'
+    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу №5'
   );
-  bot.hears(/[0-9]/, async (ctx) => {
-    userTask.id = Number(ctx.message.text) - 1;
-    action = 'delete';
-    await ctx.replyWithHTML(
-      'Вы действительно хотите удалить задачу №' +
-      `<i>${userTask.id + 1}</i>`,
-      yesNoKeyboard()
-    );
-  });
+  action = 'delete';
 }
 
 async function isCompleted(ctx) {
   updateData(ctx);
   await ctx.replyWithHTML(
-    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы установить или убрать отметку готовности задачи №5'
+    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы обновить статус задачи №5'
   );
-  bot.hears(/[0-9]/, async (ctx) => {
-    userTask.id = Number(ctx.message.text) - 1;
-    action = 'isComleted';
-    await ctx.replyWithHTML(
-      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
-      `<i>${userTask.id + 1}</i>`,
-      yesNoKeyboard()
-    );
-  });
+  action = 'isCompleted';
 }
 
 function yesNoKeyboard() {
@@ -166,7 +168,7 @@ bot.action(['yes', 'no'], async (ctx) => {
       }
     );
     await ctx.editMessageText('Ваша задача успешно удалена');
-  } else if (ctx.callbackQuery.data === 'yes' && action === 'isComleted') {
+  } else if (ctx.callbackQuery.data === 'yes' && action === 'isCompleted') {
     userTask.list[userTask.id].isCompleted = !userTask.list[userTask.id].isCompleted;
     users.updateOne(
       { chatId: String(ctx.chat.id) },
