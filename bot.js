@@ -60,27 +60,66 @@ bot.command('updateTask', async (ctx) => {
   }
 });
 
-async function updateData(ctx) {
-  objDataBase = await users.findOne({ chatId: String(ctx.chat.id) });
-  userTask.list = objDataBase.tasks;
-}
+bot.command('menu', async (ctx) => {
+  await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
+    [
+      [Markup.button.callback('Мои задачи', 'myTasks')],
+      [Markup.button.callback('Добавить задачу', 'addTask')],
+      [Markup.button.callback('Удалить задачу', 'deleteTask')],
+    ]
+  ));
+});
 
-async function addTask(ctx) {
-  updateData(ctx);
-  await ctx.reply('Напишите задачу');
-  bot.hears(/\D/, async (ctx) => {
-    userTask.text = ctx.message.text;
-    action = 'add';
+bot.on('text', async (ctx) => {
+  userTask.text = ctx.message.text;
+  userTask.id = Number(ctx.message.text) - 1;
+  if (action === 'add') {
     await ctx.replyWithHTML(
       'Вы действительно хотите добавить задачу:\n\n' +
         `<i>${ctx.message.text}</i>`,
       yesNoKeyboard()
     );
-  });
+  } else if (action === 'delete') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите удалить задачу №' +
+      `<i>${userTask.id + 1}</i>`,
+      yesNoKeyboard()
+    );
+  } else if (action === 'isCompleted') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
+      `<i>${userTask.id + 1}</i>`,
+      yesNoKeyboard()
+    );
+  } else {
+    await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
+  }
+});
+
+async function updateLocalData(ctx) {
+  objDataBase = await users.findOne({ chatId: String(ctx.chat.id) });
+  userTask.list = objDataBase.tasks;
+}
+
+async function updateDataBase(ctx) {
+  await users.updateOne(
+    { chatId: String(ctx.chat.id) },
+    {
+      $set: {
+        tasks: userTask.list
+      }
+    }
+  );
+}
+
+async function addTask(ctx) {
+  updateLocalData(ctx);
+  await ctx.reply('Напишите задачу');
+  action = 'add';
 }
 
 async function myTasks(ctx) {
-  updateData(ctx);
+  updateLocalData(ctx);
   const tasks = await new Promise((resolve) => {
     setTimeout(() => {
       resolve(userTask.list);
@@ -104,35 +143,19 @@ async function myTasks(ctx) {
 }
 
 async function deleteTask(ctx) {
-  updateData(ctx);
+  updateLocalData(ctx);
   await ctx.replyWithHTML(
-    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу 5'
+    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу №5'
   );
-  bot.hears(/[0-9]/, async (ctx) => {
-    userTask.id = Number(ctx.message.text) - 1;
-    action = 'delete';
-    await ctx.replyWithHTML(
-      'Вы действительно хотите удалить задачу №' +
-      `<i>${userTask.id + 1}</i>`,
-      yesNoKeyboard()
-    );
-  });
+  action = 'delete';
 }
 
 async function isCompleted(ctx) {
-  updateData(ctx);
+  updateLocalData(ctx);
   await ctx.replyWithHTML(
-    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы установить или убрать отметку готовности задачи №5'
+    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы обновить статус задачи №5'
   );
-  bot.hears(/[0-9]/, async (ctx) => {
-    userTask.id = Number(ctx.message.text) - 1;
-    action = 'isComleted';
-    await ctx.replyWithHTML(
-      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
-      `<i>${userTask.id + 1}</i>`,
-      yesNoKeyboard()
-    );
-  });
+  action = 'isCompleted';
 }
 
 function yesNoKeyboard() {
@@ -146,50 +169,18 @@ bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
   if (ctx.callbackQuery.data === 'yes' && action === 'add') {
     userTask.list.push({ taskName: userTask.text, isCompleted: false });
-    await users.updateOne(
-      { chatId: String(ctx.chat.id) },
-      {
-        $set: {
-          tasks: userTask.list
-        }
-      }
-    );
     await ctx.editMessageText('Ваша задача успешно добавлена');
   } else if (ctx.callbackQuery.data === 'yes' && action === 'delete') {
     userTask.list.splice(userTask.id, 1);
-    users.updateOne(
-      { chatId: String(ctx.chat.id) },
-      {
-        $set: {
-          tasks: userTask.list
-        }
-      }
-    );
     await ctx.editMessageText('Ваша задача успешно удалена');
-  } else if (ctx.callbackQuery.data === 'yes' && action === 'isComleted') {
+  } else if (ctx.callbackQuery.data === 'yes' && action === 'isCompleted') {
     userTask.list[userTask.id].isCompleted = !userTask.list[userTask.id].isCompleted;
-    users.updateOne(
-      { chatId: String(ctx.chat.id) },
-      {
-        $set: {
-          tasks: userTask.list
-        }
-      }
-    );
     await ctx.editMessageText('Статус вашей задачи успешно обновлен');
   } else {
     await ctx.deleteMessage();
   }
-});
-
-bot.command('menu', async (ctx) => {
-  await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
-    [
-      [Markup.button.callback('Мои задачи', 'myTasks')],
-      [Markup.button.callback('Добавить задачу', 'addTask')],
-      [Markup.button.callback('Удалить задачу', 'deleteTask')],
-    ]
-  ));
+  updateDataBase(ctx);
+  action = '';
 });
 
 bot.action('myTasks', async (ctx) => {
