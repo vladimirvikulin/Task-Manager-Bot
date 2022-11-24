@@ -91,6 +91,17 @@ async function updateLocalData(ctx) {
   userTask.list = objDataBase.tasks;
 }
 
+async function updateDataBase(ctx) {
+  await users.updateOne(
+    { chatId: String(ctx.chat.id) },
+    {
+      $set: {
+        tasks: userTask.list
+      }
+    }
+  );
+}
+
 async function addTask(ctx) {
   updateLocalData(ctx);
   await ctx.reply('Напишите задачу');
