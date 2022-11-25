@@ -7,6 +7,7 @@ const commands = `
 /myTasks - Посмотреть задачи
 /addTask - Добавить задачу
 /deleteTask - Удалить задачу
+/updateTask - Обновить статус задачи
 /date - Посмотреть дату
 `;
 
