@@ -63,9 +63,10 @@ bot.command('updateTask', async (ctx) => {
 bot.command('menu', async (ctx) => {
   await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
     [
-      [Markup.button.callback('Мои задачи', 'myTasks')],
-      [Markup.button.callback('Добавить задачу', 'addTask')],
-      [Markup.button.callback('Удалить задачу', 'deleteTask')],
+      [Markup.button.callback('Мои задачи 📋', 'myTasks')],
+      [Markup.button.callback('Добавить задачу ✏️', 'addTask')],
+      [Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
+      [Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
     ]
   ));
 });
@@ -183,10 +184,31 @@ bot.action(['yes', 'no'], async (ctx) => {
   action = '';
 });
 
+bot.action('menu', async (ctx) => {
+  try {
+    await ctx.deleteMessage();
+    await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
+      [
+        [Markup.button.callback('Мои задачи 📋', 'myTasks')],
+        [Markup.button.callback('Добавить задачу ✏️', 'addTask')],
+        [Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
+        [Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
+      ]
+    ));
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.action('myTasks', async (ctx) => {
   try {
     await ctx.answerCbQuery();
     await myTasks(ctx);
+    await ctx.replyWithHTML('Меню возврата', Markup.inlineKeyboard(
+      [
+        [Markup.button.callback('Вернуться в меню 🔙', 'menu')],
+      ]
+    ));
   } catch (e) {
     console.log(e);
   }
@@ -205,6 +227,15 @@ bot.action('deleteTask', async (ctx) => {
   try {
     await ctx.answerCbQuery();
     await deleteTask(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.action('updateTask', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await isCompleted(ctx);
   } catch (e) {
     console.log(e);
   }
