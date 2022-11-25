@@ -211,6 +211,15 @@ bot.action('deleteTask', async (ctx) => {
   }
 });
 
+bot.action('updateTask', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await isCompleted(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.launch();
 
 // Enable graceful stop
