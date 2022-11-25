@@ -188,6 +188,11 @@ bot.action('myTasks', async (ctx) => {
   try {
     await ctx.answerCbQuery();
     await myTasks(ctx);
+    await ctx.replyWithHTML('Меню возврата', Markup.inlineKeyboard(
+      [
+        [Markup.button.callback('Вернуться в меню 🔙', 'menu')],
+      ]
+    ));
   } catch (e) {
     console.log(e);
   }
