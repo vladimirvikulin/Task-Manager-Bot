@@ -63,9 +63,10 @@ bot.command('updateTask', async (ctx) => {
 bot.command('menu', async (ctx) => {
   await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
     [
-      [Markup.button.callback('Мои задачи', 'myTasks')],
-      [Markup.button.callback('Добавить задачу', 'addTask')],
-      [Markup.button.callback('Удалить задачу', 'deleteTask')],
+      [Markup.button.callback('Мои задачи 📋', 'myTasks')],
+      [Markup.button.callback('Добавить задачу ✏️', 'addTask')],
+      [Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
+      [Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
     ]
   ));
 });
