@@ -189,6 +189,9 @@ bot.action(['yes', 'no'], async (ctx) => {
   } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'isCompleted') {
     userTask.list[userTask.id].isCompleted = !userTask.list[userTask.id].isCompleted;
     await ctx.editMessageText('Статус вашей задачи успешно обновлен');
+  } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'addGroup') {
+    userTask.list.push({ tasks: [], groupName: userTask.text });
+    await ctx.editMessageText('Группа успешно добавлена');
   } else {
     await ctx.deleteMessage();
   }
