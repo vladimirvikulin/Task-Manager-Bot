@@ -14,8 +14,8 @@ const userTask = {
   list: [],
   text: '',
   id: 0,
+  action: '',
 };
-let action = '';
 bot.start(async (ctx) => {
   await ctx.reply(`Привет ${ctx.message.from.first_name}, этот бот создан для планировки задач.\nНапиши команду /help, чтобы узнать команды бота.`);
   const userExists = await users.findOne({ username: ctx.message.from.username });
@@ -74,19 +74,19 @@ bot.command('menu', async (ctx) => {
 bot.on('text', async (ctx) => {
   userTask.text = ctx.message.text;
   userTask.id = Number(ctx.message.text) - 1;
-  if (action === 'add') {
+  if (userTask.action === 'add') {
     await ctx.replyWithHTML(
       'Вы действительно хотите добавить задачу:\n\n' +
         `<i>${ctx.message.text}</i>`,
       yesNoKeyboard()
     );
-  } else if (action === 'delete') {
+  } else if (userTask.action === 'delete') {
     await ctx.replyWithHTML(
       'Вы действительно хотите удалить задачу №' +
       `<i>${userTask.id + 1}</i>`,
       yesNoKeyboard()
     );
-  } else if (action === 'isCompleted') {
+  } else if (userTask.action === 'isCompleted') {
     await ctx.replyWithHTML(
       'Вы действительно хотите установить или убрать отметку готовности задачи №' +
       `<i>${userTask.id + 1}</i>`,
@@ -116,7 +116,7 @@ async function updateDataBase(ctx) {
 async function addTask(ctx) {
   updateLocalData(ctx);
   await ctx.reply('Напишите задачу');
-  action = 'add';
+  userTask.action = 'add';
 }
 
 async function myTasks(ctx) {
@@ -148,7 +148,7 @@ async function deleteTask(ctx) {
   await ctx.replyWithHTML(
     'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу №5'
   );
-  action = 'delete';
+  userTask.action = 'delete';
 }
 
 async function isCompleted(ctx) {
@@ -156,7 +156,7 @@ async function isCompleted(ctx) {
   await ctx.replyWithHTML(
     'Введите порядковый номер задачи, например <b> "5" </b>,чтобы обновить статус задачи №5'
   );
-  action = 'isCompleted';
+  userTask.action = 'isCompleted';
 }
 
 function yesNoKeyboard() {
@@ -168,20 +168,20 @@ function yesNoKeyboard() {
 
 bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
-  if (ctx.callbackQuery.data === 'yes' && action === 'add') {
+  if (ctx.callbackQuery.data === 'yes' && userTask.action === 'add') {
     userTask.list.push({ taskName: userTask.text, isCompleted: false });
     await ctx.editMessageText('Ваша задача успешно добавлена');
-  } else if (ctx.callbackQuery.data === 'yes' && action === 'delete') {
+  } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'delete') {
     userTask.list.splice(userTask.id, 1);
     await ctx.editMessageText('Ваша задача успешно удалена');
-  } else if (ctx.callbackQuery.data === 'yes' && action === 'isCompleted') {
+  } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'isCompleted') {
     userTask.list[userTask.id].isCompleted = !userTask.list[userTask.id].isCompleted;
     await ctx.editMessageText('Статус вашей задачи успешно обновлен');
   } else {
     await ctx.deleteMessage();
   }
   updateDataBase(ctx);
-  action = '';
+  userTask.action = '';
 });
 
 bot.action('menu', async (ctx) => {
