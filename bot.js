@@ -92,6 +92,12 @@ bot.on('text', async (ctx) => {
       `<i>${userTask.id + 1}</i>`,
       yesNoKeyboard()
     );
+  } else if (userTask.action === 'addGroup') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите добавить группу задач ' +
+      `<i>${userTask.text}</i>`,
+      yesNoKeyboard()
+    );
   } else {
     await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
   }
