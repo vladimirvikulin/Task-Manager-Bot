@@ -113,6 +113,12 @@ async function updateDataBase(ctx) {
   );
 }
 
+async function addGroup(ctx) {
+  updateLocalData(ctx);
+  await ctx.reply('Напишите группу');
+  userTask.action = 'addGroup';
+}
+
 async function addTask(ctx) {
   updateLocalData(ctx);
   await ctx.reply('Напишите задачу');
