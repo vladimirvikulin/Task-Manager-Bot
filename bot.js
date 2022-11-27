@@ -18,9 +18,9 @@ const userTask = {
 };
 bot.start(async (ctx) => {
   await ctx.reply(`Привет ${ctx.message.from.first_name}, этот бот создан для планировки задач.\nНапиши команду /help, чтобы узнать команды бота.`);
-  const userExists = await users.findOne({ username: ctx.message.from.username });
+  const userExists = await users.find({ username: ctx.message.from.username });
   if (userExists === null) {
-    users.insertOne({ username: `${ctx.message.from.username}`,
+    users.create({ username: `${ctx.message.from.username}`,
       chatId: `${ctx.chat.id}`,
       tasks: [] });
   }
@@ -98,12 +98,12 @@ bot.on('text', async (ctx) => {
 });
 
 async function updateLocalData(ctx) {
-  objDataBase = await users.findOne({ chatId: String(ctx.chat.id) });
+  objDataBase = await users.find({ chatId: String(ctx.chat.id) });
   userTask.list = objDataBase.tasks;
 }
 
 async function updateDataBase(ctx) {
-  await users.updateOne(
+  await users.update(
     { chatId: String(ctx.chat.id) },
     {
       $set: {
