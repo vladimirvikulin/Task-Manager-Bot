@@ -125,6 +125,30 @@ async function addGroup(ctx) {
   userTask.action = 'addGroup';
 }
 
+async function chooseGroup(ctx) {
+  updateLocalData(ctx);
+  const groups = await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(userTask.list);
+    }, 300);
+  });
+  let listGroups = '';
+  for (let i = 0; i < groups.length; i++) {
+    if (i === userTask.activeGroup) {
+      listGroups += `${i + 1}. ${groups[i].groupName} 🟢\n`;
+    } else {
+      listGroups += `${i + 1}. ${groups[i].groupName}\n`;
+    }
+  }
+  await ctx.replyWithHTML(
+    '<b>Список ваших групп:</b>\n\n' +
+    `${listGroups}`
+  );
+  await ctx.reply('Введите номер группы, чтобы выбрать активную группу');
+  userTask.action = 'groups';
+}
+
+
 async function addTask(ctx) {
   updateLocalData(ctx);
   await ctx.reply('Напишите задачу');
