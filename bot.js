@@ -107,7 +107,8 @@ bot.on('text', async (ctx) => {
 
 async function updateLocalData(ctx) {
   objDataBase = await users.find({ chatId: String(ctx.chat.id) });
-  userTask.list = objDataBase.tasks;
+  userTask.list = objDataBase.groups;
+  userTask.activeGroup = objDataBase.activeGroup;
 }
 
 async function updateDataBase(ctx) {
