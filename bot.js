@@ -100,6 +100,10 @@ bot.on('text', async (ctx) => {
       `<i>${userTask.text}</i>`,
       yesNoKeyboard()
     );
+  } else if (userTask.action === 'chooseGroup') {
+    userTask.activeGroup = Number(ctx.message.text) - 1;
+    await ctx.reply('Вы успешно выбрали активную группу');
+    await updateDataBase(ctx);
   } else {
     await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
   }
@@ -149,7 +153,7 @@ async function chooseGroup(ctx) {
     `${listGroups}`
   );
   await ctx.reply('Введите номер группы, чтобы выбрать активную группу');
-  userTask.action = 'groups';
+  userTask.action = 'chooseGroup';
 }
 
 
