@@ -213,13 +213,13 @@ function yesNoKeyboard() {
 bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
   if (ctx.callbackQuery.data === 'yes' && userTask.action === 'add') {
-    userTask.list.push({ taskName: userTask.text, isCompleted: false });
+    userTask.list[userTask.activeGroup].tasks.push({ taskName: userTask.text, isCompleted: false });
     await ctx.editMessageText('Ваша задача успешно добавлена');
   } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'delete') {
-    userTask.list.splice(userTask.id, 1);
+    userTask.list[userTask.activeGroup].tasks.splice(userTask.id, 1);
     await ctx.editMessageText('Ваша задача успешно удалена');
   } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'isCompleted') {
-    userTask.list[userTask.id].isCompleted = !userTask.list[userTask.id].isCompleted;
+    userTask.list[userTask.activeGroup].tasks[userTask.id].isCompleted = !userTask.list[userTask.activeGroup].tasks[userTask.id].isCompleted;
     await ctx.editMessageText('Статус вашей задачи успешно обновлен');
   } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'addGroup') {
     userTask.list.push({ tasks: [], groupName: userTask.text });
