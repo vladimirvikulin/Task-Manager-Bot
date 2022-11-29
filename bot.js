@@ -15,6 +15,7 @@ const userTask = {
   text: '',
   id: 0,
   action: '',
+  activeGroup: 0,
 };
 bot.start(async (ctx) => {
   await ctx.reply(`Привет ${ctx.message.from.first_name}, этот бот создан для планировки задач.\nНапиши команду /help, чтобы узнать команды бота.`);
@@ -22,7 +23,8 @@ bot.start(async (ctx) => {
   if (userExists === null) {
     users.create({ username: `${ctx.message.from.username}`,
       chatId: `${ctx.chat.id}`,
-      tasks: [] });
+      activeGroup: 0,
+      groups: [] });
   }
 });
 
@@ -113,7 +115,8 @@ async function updateDataBase(ctx) {
     { chatId: String(ctx.chat.id) },
     {
       $set: {
-        tasks: userTask.list
+        groups: userTask.list,
+        activeGroup: userTask.activeGroup
       }
     }
   );
