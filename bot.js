@@ -167,7 +167,7 @@ async function myTasks(ctx) {
   updateLocalData(ctx);
   const tasks = await new Promise((resolve) => {
     setTimeout(() => {
-      resolve(userTask.list);
+      resolve(userTask.list[userTask.activeGroup].tasks);
     }, 300);
   });
   let result = '';
