@@ -15,7 +15,26 @@ async function connectDatabase() {
     await client.db().createCollection('users');
   }
 }
-const users = client.db().collection('users');
+
+class Collection {
+  constructor(name) {
+    this.collection = client.db().collection(name);
+  }
+
+  find(obj) {
+    return this.collection.findOne(obj);
+  }
+
+  create(obj) {
+    return this.collection.insertOne(obj);
+  }
+
+  update(obj, update) {
+    return this.collection.updateOne(obj, update);
+  }
+}
+
+const users = new Collection('users');
 
 module.exports = { connectDatabase, users };
 
