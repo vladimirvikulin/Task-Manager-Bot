@@ -70,6 +70,14 @@ bot.command('chooseGroup', async (ctx) => {
   }
 });
 
+bot.command('myGroups', async (ctx) => {
+  try {
+    await myGroups(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.command('menu', async (ctx) => {
   await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
     [
