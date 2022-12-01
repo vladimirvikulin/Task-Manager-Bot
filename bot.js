@@ -92,10 +92,10 @@ bot.command('addGroup', async (ctx) => {
 bot.command('menu', async (ctx) => {
   await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
     [
-      [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
+      [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
       [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
       [Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
-      [Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
+      [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
     ]
   ));
 });
@@ -271,10 +271,10 @@ bot.action('menu', async (ctx) => {
     await ctx.deleteMessage();
     await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
       [
-        [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
+        [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
         [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
         [Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
-        [Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
+        [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
       ]
     ));
   } catch (e) {
