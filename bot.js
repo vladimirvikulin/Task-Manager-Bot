@@ -17,6 +17,9 @@ const userTask = {
   action: '',
   activeGroup: 0,
 };
+
+//Commands
+
 bot.start(async (ctx) => {
   await ctx.reply(`Привет ${ctx.message.from.first_name}, этот бот создан для планировки задач.\nНапиши команду /help, чтобы узнать команды бота.`);
   const userExists = await users.find({ username: ctx.message.from.username });
@@ -134,6 +137,8 @@ bot.on('text', async (ctx) => {
   }
 });
 
+//Functions
+
 async function updateLocalData(ctx) {
   objDataBase = await users.find({ chatId: String(ctx.chat.id) });
   userTask.list = objDataBase.groups;
@@ -237,6 +242,8 @@ function yesNoKeyboard() {
     [Markup.button.callback('Нет', 'no')]
   ]);
 }
+
+//Button actions
 
 bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
