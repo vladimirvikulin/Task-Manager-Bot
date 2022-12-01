@@ -291,6 +291,20 @@ bot.action('chooseGroup', async (ctx) => {
   }
 });
 
+bot.action('myGroups', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await myGroups(ctx);
+    await ctx.replyWithHTML('Меню возврата', Markup.inlineKeyboard(
+      [
+        [Markup.button.callback('Вернуться в меню 🔙', 'menu')],
+      ]
+    ));
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.action('myTasks', async (ctx) => {
   try {
     await ctx.answerCbQuery();
