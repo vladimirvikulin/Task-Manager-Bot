@@ -104,6 +104,7 @@ bot.on('text', async (ctx) => {
     userTask.activeGroup = Number(ctx.message.text) - 1;
     await ctx.reply('Вы успешно выбрали активную группу');
     await updateDataBase(ctx);
+    await myGroups(ctx);
   } else {
     await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
   }
@@ -133,7 +134,7 @@ async function addGroup(ctx) {
   userTask.action = 'addGroup';
 }
 
-async function chooseGroup(ctx) {
+async function myGroups(ctx) {
   updateLocalData(ctx);
   const groups = await new Promise((resolve) => {
     setTimeout(() => {
@@ -152,10 +153,13 @@ async function chooseGroup(ctx) {
     '<b>Список ваших групп:</b>\n\n' +
     `${listGroups}`
   );
+}
+
+async function chooseGroup(ctx) {
+  await myGroups(ctx);
   await ctx.reply('Введите номер группы, чтобы выбрать активную группу');
   userTask.action = 'chooseGroup';
 }
-
 
 async function addTask(ctx) {
   updateLocalData(ctx);
