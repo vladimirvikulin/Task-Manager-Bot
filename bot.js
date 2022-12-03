@@ -89,12 +89,20 @@ bot.command('addGroup', async (ctx) => {
   }
 });
 
+bot.command('deleteGroup', async (ctx) => {
+  try {
+    await deleteGroup(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.command('menu', async (ctx) => {
   await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
     [
       [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
       [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
-      [Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
+      [Markup.button.callback('Удалить группу 🗑️', 'deleteGroup'), Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
       [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
     ]
   ));
@@ -132,6 +140,12 @@ bot.on('text', async (ctx) => {
     await ctx.reply('Вы успешно выбрали активную группу');
     await updateDataBase(ctx);
     await myGroups(ctx);
+  } else if (userTask.action === 'deleteGroup') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите удалить группу №' +
+      `<i>${userTask.id + 1}</i>`,
+      yesNoKeyboard()
+    );
   } else {
     await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
   }
@@ -220,6 +234,14 @@ async function myTasks(ctx) {
   }
 }
 
+async function deleteGroup(ctx) {
+  updateLocalData(ctx);
+  await ctx.replyWithHTML(
+    'Введите порядковый номер группы, например <b> "5" </b>,чтобы удалить группу №5'
+  );
+  userTask.action = 'deleteGroup';
+}
+
 async function deleteTask(ctx) {
   updateLocalData(ctx);
   await ctx.replyWithHTML(
@@ -259,6 +281,9 @@ bot.action(['yes', 'no'], async (ctx) => {
   } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'addGroup') {
     userTask.list.push({ tasks: [], groupName: userTask.text });
     await ctx.editMessageText('Группа успешно добавлена');
+  } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'deleteGroup') {
+    userTask.list.splice(userTask.id, 1);
+    await ctx.editMessageText('Группа успешно удалена');
   } else {
     await ctx.deleteMessage();
   }
@@ -273,7 +298,7 @@ bot.action('menu', async (ctx) => {
       [
         [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
         [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
-        [Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
+        [Markup.button.callback('Удалить группу 🗑️', 'deleteGroup'), Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
         [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
       ]
     ));
@@ -350,6 +375,15 @@ bot.action('addGroup', async (ctx) => {
   try {
     await ctx.answerCbQuery();
     await addGroup(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.action('deleteGroup', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await deleteGroup(ctx);
   } catch (e) {
     console.log(e);
   }
