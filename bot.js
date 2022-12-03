@@ -132,6 +132,12 @@ bot.on('text', async (ctx) => {
     await ctx.reply('Вы успешно выбрали активную группу');
     await updateDataBase(ctx);
     await myGroups(ctx);
+  } else if (userTask.action === 'deleteGroup') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите удалить группу №' +
+      `<i>${userTask.id + 1}</i>`,
+      yesNoKeyboard()
+    );
   } else {
     await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
   }
