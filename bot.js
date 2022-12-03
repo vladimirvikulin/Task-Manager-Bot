@@ -372,6 +372,15 @@ bot.action('addGroup', async (ctx) => {
   }
 });
 
+bot.action('deleteGroup', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await deleteGroup(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.launch();
 
 // Enable graceful stop
