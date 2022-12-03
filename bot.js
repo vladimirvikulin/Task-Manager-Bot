@@ -89,6 +89,14 @@ bot.command('addGroup', async (ctx) => {
   }
 });
 
+bot.command('deleteGroup', async (ctx) => {
+  try {
+    await deleteGroup(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 bot.command('menu', async (ctx) => {
   await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
     [
