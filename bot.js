@@ -220,6 +220,14 @@ async function myTasks(ctx) {
   }
 }
 
+async function deleteGroup(ctx) {
+  updateLocalData(ctx);
+  await ctx.replyWithHTML(
+    'Введите порядковый номер группы, например <b> "5" </b>,чтобы удалить группу №5'
+  );
+  userTask.action = 'deleteGroup';
+}
+
 async function deleteTask(ctx) {
   updateLocalData(ctx);
   await ctx.replyWithHTML(
