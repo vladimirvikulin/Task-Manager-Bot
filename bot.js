@@ -273,6 +273,9 @@ bot.action(['yes', 'no'], async (ctx) => {
   } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'addGroup') {
     userTask.list.push({ tasks: [], groupName: userTask.text });
     await ctx.editMessageText('Группа успешно добавлена');
+  } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'deleteGroup') {
+    userTask.list.splice(userTask.id, 1);
+    await ctx.editMessageText('Группа успешно удалена');
   } else {
     await ctx.deleteMessage();
   }
