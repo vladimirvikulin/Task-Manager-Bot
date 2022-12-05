@@ -279,7 +279,9 @@ bot.action(['yes', 'no'], async (ctx) => {
     userLocalObj.groups[userLocalObj.activeGroup].tasks.splice(userLocalObj.id, 1);
     await ctx.editMessageText('Ваша задача успешно удалена');
   } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'isCompleted') {
-    userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted = !userLocalObj.list[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted;
+    let isCompleted = userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted;
+    isCompleted = !isCompleted;
+    userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted = isCompleted;
     await ctx.editMessageText('Статус вашей задачи успешно обновлен');
   } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addGroup') {
     userLocalObj.groups.push({ tasks: [], groupName: userLocalObj.text });
