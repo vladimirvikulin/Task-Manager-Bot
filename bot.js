@@ -146,6 +146,15 @@ bot.on('text', async (ctx) => {
       yesNoKeyboard()
     );
   } else if (userLocalObj.action === 'chooseGroup') {
+    userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      return;
+    }
     userLocalObj.activeGroup = Number(ctx.message.text) - 1;
     await ctx.reply('Вы успешно выбрали активную группу');
     await updateDataBase(ctx);
