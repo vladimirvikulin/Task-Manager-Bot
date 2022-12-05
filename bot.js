@@ -119,6 +119,14 @@ bot.on('text', async (ctx) => {
     );
   } else if (userLocalObj.action === 'deleteTask') {
     userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.taskId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
+      await ctx.reply('Задачи с таким номером нет, попробуйте еще раз');
+      return;
+    }
     await ctx.replyWithHTML(
       'Вы действительно хотите удалить задачу №' +
       `<i>${userLocalObj.taskId + 1}</i>`,
