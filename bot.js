@@ -124,7 +124,7 @@ bot.on('text', async (ctx) => {
       return;
     }
     if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
-      await ctx.reply('Задачи с таким номером нет, попробуйте еще раз');
+      await ctx.reply('Задачи с таким номером нет, попробуй еще раз');
       return;
     }
     await ctx.replyWithHTML(
@@ -152,6 +152,14 @@ bot.on('text', async (ctx) => {
     await myGroups(ctx);
   } else if (userLocalObj.action === 'deleteGroup') {
     userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      return;
+    }
     await ctx.replyWithHTML(
       'Вы действительно хотите удалить группу №' +
       `<i>${userLocalObj.groupId + 1}</i>`,
