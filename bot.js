@@ -10,10 +10,11 @@ const { connectDatabase, users } = require('./db.js');
 const myConsts = require('./consts');
 connectDatabase();
 let objDataBase;
-const userTask = {
-  list: [],
+const userLocalObj = {
+  groups: [],
   text: '',
-  id: 0,
+  taskId: 0,
+  groupId: 0,
   action: '',
   activeGroup: 0,
 };
@@ -109,41 +110,68 @@ bot.command('menu', async (ctx) => {
 });
 
 bot.on('text', async (ctx) => {
-  userTask.text = ctx.message.text;
-  userTask.id = Number(ctx.message.text) - 1;
-  if (userTask.action === 'add') {
+  userLocalObj.text = ctx.message.text;
+  if (userLocalObj.action === 'addTask') {
     await ctx.replyWithHTML(
       'Вы действительно хотите добавить задачу:\n\n' +
         `<i>${ctx.message.text}</i>`,
       yesNoKeyboard()
     );
-  } else if (userTask.action === 'delete') {
+  } else if (userLocalObj.action === 'deleteTask') {
+    userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.taskId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
+      await ctx.reply('Задачи с таким номером нет, попробуй еще раз');
+      return;
+    }
     await ctx.replyWithHTML(
       'Вы действительно хотите удалить задачу №' +
-      `<i>${userTask.id + 1}</i>`,
+      `<i>${userLocalObj.taskId + 1}</i>`,
       yesNoKeyboard()
     );
-  } else if (userTask.action === 'isCompleted') {
+  } else if (userLocalObj.action === 'isCompleted') {
+    userLocalObj.taskId = Number(ctx.message.text) - 1;
     await ctx.replyWithHTML(
       'Вы действительно хотите установить или убрать отметку готовности задачи №' +
-      `<i>${userTask.id + 1}</i>`,
+      `<i>${userLocalObj.taskId + 1}</i>`,
       yesNoKeyboard()
     );
-  } else if (userTask.action === 'addGroup') {
+  } else if (userLocalObj.action === 'addGroup') {
     await ctx.replyWithHTML(
       'Вы действительно хотите добавить группу задач ' +
-      `<i>${userTask.text}</i>`,
+      `<i>${userLocalObj.text}</i>`,
       yesNoKeyboard()
     );
-  } else if (userTask.action === 'chooseGroup') {
-    userTask.activeGroup = Number(ctx.message.text) - 1;
+  } else if (userLocalObj.action === 'chooseGroup') {
+    userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      return;
+    }
+    userLocalObj.activeGroup = Number(ctx.message.text) - 1;
     await ctx.reply('Вы успешно выбрали активную группу');
     await updateDataBase(ctx);
     await myGroups(ctx);
-  } else if (userTask.action === 'deleteGroup') {
+  } else if (userLocalObj.action === 'deleteGroup') {
+    userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      return;
+    }
     await ctx.replyWithHTML(
       'Вы действительно хотите удалить группу №' +
-      `<i>${userTask.id + 1}</i>`,
+      `<i>${userLocalObj.groupId + 1}</i>`,
       yesNoKeyboard()
     );
   } else {
@@ -155,8 +183,8 @@ bot.on('text', async (ctx) => {
 
 async function updateLocalData(ctx) {
   objDataBase = await users.find({ chatId: String(ctx.chat.id) });
-  userTask.list = objDataBase.groups;
-  userTask.activeGroup = objDataBase.activeGroup;
+  userLocalObj.groups = objDataBase.groups;
+  userLocalObj.activeGroup = objDataBase.activeGroup;
 }
 
 async function updateDataBase(ctx) {
@@ -164,8 +192,8 @@ async function updateDataBase(ctx) {
     { chatId: String(ctx.chat.id) },
     {
       $set: {
-        groups: userTask.list,
-        activeGroup: userTask.activeGroup
+        groups: userLocalObj.groups,
+        activeGroup: userLocalObj.activeGroup
       }
     }
   );
@@ -174,19 +202,19 @@ async function updateDataBase(ctx) {
 async function addGroup(ctx) {
   updateLocalData(ctx);
   await ctx.reply('Напишите группу');
-  userTask.action = 'addGroup';
+  userLocalObj.action = 'addGroup';
 }
 
 async function myGroups(ctx) {
   updateLocalData(ctx);
   const groups = await new Promise((resolve) => {
     setTimeout(() => {
-      resolve(userTask.list);
+      resolve(userLocalObj.groups);
     }, 300);
   });
   let listGroups = '';
   for (let i = 0; i < groups.length; i++) {
-    if (i === userTask.activeGroup) {
+    if (i === userLocalObj.activeGroup) {
       listGroups += `${i + 1}. ${groups[i].groupName} 🟢\n`;
     } else {
       listGroups += `${i + 1}. ${groups[i].groupName}\n`;
@@ -201,20 +229,20 @@ async function myGroups(ctx) {
 async function chooseGroup(ctx) {
   await myGroups(ctx);
   await ctx.reply('Введите номер группы, чтобы выбрать активную группу');
-  userTask.action = 'chooseGroup';
+  userLocalObj.action = 'chooseGroup';
 }
 
 async function addTask(ctx) {
   updateLocalData(ctx);
   await ctx.reply('Напишите задачу');
-  userTask.action = 'add';
+  userLocalObj.action = 'addTask';
 }
 
 async function myTasks(ctx) {
   updateLocalData(ctx);
   const tasks = await new Promise((resolve) => {
     setTimeout(() => {
-      resolve(userTask.list[userTask.activeGroup].tasks);
+      resolve(userLocalObj.groups[userLocalObj.activeGroup].tasks);
     }, 300);
   });
   let result = '';
@@ -239,7 +267,7 @@ async function deleteGroup(ctx) {
   await ctx.replyWithHTML(
     'Введите порядковый номер группы, например <b> "5" </b>,чтобы удалить группу №5'
   );
-  userTask.action = 'deleteGroup';
+  userLocalObj.action = 'deleteGroup';
 }
 
 async function deleteTask(ctx) {
@@ -247,7 +275,7 @@ async function deleteTask(ctx) {
   await ctx.replyWithHTML(
     'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу №5'
   );
-  userTask.action = 'delete';
+  userLocalObj.action = 'deleteTask';
 }
 
 async function isCompleted(ctx) {
@@ -255,7 +283,7 @@ async function isCompleted(ctx) {
   await ctx.replyWithHTML(
     'Введите порядковый номер задачи, например <b> "5" </b>,чтобы обновить статус задачи №5'
   );
-  userTask.action = 'isCompleted';
+  userLocalObj.action = 'isCompleted';
 }
 
 function yesNoKeyboard() {
@@ -269,26 +297,28 @@ function yesNoKeyboard() {
 
 bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
-  if (ctx.callbackQuery.data === 'yes' && userTask.action === 'add') {
-    userTask.list[userTask.activeGroup].tasks.push({ taskName: userTask.text, isCompleted: false });
+  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addTask') {
+    userLocalObj.groups[userLocalObj.activeGroup].tasks.push({ taskName: userLocalObj.text, isCompleted: false });
     await ctx.editMessageText('Ваша задача успешно добавлена');
-  } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'delete') {
-    userTask.list[userTask.activeGroup].tasks.splice(userTask.id, 1);
+  } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteTask') {
+    userLocalObj.groups[userLocalObj.activeGroup].tasks.splice(userLocalObj.id, 1);
     await ctx.editMessageText('Ваша задача успешно удалена');
-  } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'isCompleted') {
-    userTask.list[userTask.activeGroup].tasks[userTask.id].isCompleted = !userTask.list[userTask.activeGroup].tasks[userTask.id].isCompleted;
+  } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'isCompleted') {
+    let isCompleted = userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted;
+    isCompleted = !isCompleted;
+    userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted = isCompleted;
     await ctx.editMessageText('Статус вашей задачи успешно обновлен');
-  } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'addGroup') {
-    userTask.list.push({ tasks: [], groupName: userTask.text });
+  } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addGroup') {
+    userLocalObj.groups.push({ tasks: [], groupName: userLocalObj.text });
     await ctx.editMessageText('Группа успешно добавлена');
-  } else if (ctx.callbackQuery.data === 'yes' && userTask.action === 'deleteGroup') {
-    userTask.list.splice(userTask.id, 1);
+  } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteGroup') {
+    userLocalObj.groups.splice(userLocalObj.groupId, 1);
     await ctx.editMessageText('Группа успешно удалена');
   } else {
     await ctx.deleteMessage();
   }
   updateDataBase(ctx);
-  userTask.action = '';
+  userLocalObj.action = '';
 });
 
 bot.action('menu', async (ctx) => {

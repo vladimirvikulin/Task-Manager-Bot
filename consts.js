@@ -8,9 +8,12 @@ const commands = `
 /addTask - Добавить задачу
 /deleteTask - Удалить задачу
 /updateTask - Обновить статус задачи
+/chooseGroup - Выбрать активную группу
+/myGroups - Посмотреть твои группы
+/addGroup - Добавить группу
+/deleteGroup - Удалить группу
 /date - Посмотреть дату
 `;
 
 module.exports = { commands };
-
 
