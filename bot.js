@@ -115,7 +115,7 @@ bot.on('text', async (ctx) => {
     await ctx.replyWithHTML(
       'Вы действительно хотите добавить задачу:\n\n' +
         `<i>${ctx.message.text}</i>`,
-      yesNoKeyboard()
+      await yesNoKeyboard()
     );
   } else if (userLocalObj.action === 'deleteTask') {
     userLocalObj.taskId = Number(ctx.message.text) - 1;
@@ -130,20 +130,20 @@ bot.on('text', async (ctx) => {
     await ctx.replyWithHTML(
       'Вы действительно хотите удалить задачу №' +
       `<i>${userLocalObj.taskId + 1}</i>`,
-      yesNoKeyboard()
+      await yesNoKeyboard()
     );
   } else if (userLocalObj.action === 'isCompleted') {
     userLocalObj.taskId = Number(ctx.message.text) - 1;
     await ctx.replyWithHTML(
       'Вы действительно хотите установить или убрать отметку готовности задачи №' +
       `<i>${userLocalObj.taskId + 1}</i>`,
-      yesNoKeyboard()
+      await yesNoKeyboard()
     );
   } else if (userLocalObj.action === 'addGroup') {
     await ctx.replyWithHTML(
       'Вы действительно хотите добавить группу задач ' +
       `<i>${userLocalObj.text}</i>`,
-      yesNoKeyboard()
+      await yesNoKeyboard()
     );
   } else if (userLocalObj.action === 'chooseGroup') {
     userLocalObj.groupId = Number(ctx.message.text) - 1;
@@ -172,7 +172,7 @@ bot.on('text', async (ctx) => {
     await ctx.replyWithHTML(
       'Вы действительно хотите удалить группу №' +
       `<i>${userLocalObj.groupId + 1}</i>`,
-      yesNoKeyboard()
+      await yesNoKeyboard()
     );
   } else {
     await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
@@ -286,7 +286,7 @@ async function isCompleted(ctx) {
   userLocalObj.action = 'isCompleted';
 }
 
-function yesNoKeyboard() {
+async function yesNoKeyboard() {
   return Markup.inlineKeyboard([
     [Markup.button.callback('Да', 'yes')],
     [Markup.button.callback('Нет', 'no')]
