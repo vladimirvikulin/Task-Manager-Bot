@@ -293,6 +293,14 @@ async function yesNoKeyboard() {
   ]);
 }
 
+async function backToMenu(ctx) {
+  await ctx.replyWithHTML('Меню возврата', Markup.inlineKeyboard(
+    [
+      [Markup.button.callback('Вернуться в меню 🔙', 'menu')],
+    ]
+  ));
+}
+
 //Button actions
 
 bot.action(['yes', 'no'], async (ctx) => {
@@ -317,7 +325,8 @@ bot.action(['yes', 'no'], async (ctx) => {
   } else {
     await ctx.deleteMessage();
   }
-  updateDataBase(ctx);
+  await backToMenu(ctx);
+  await updateDataBase(ctx);
   userLocalObj.action = '';
 });
 
@@ -350,11 +359,7 @@ bot.action('myGroups', async (ctx) => {
   try {
     await ctx.answerCbQuery();
     await myGroups(ctx);
-    await ctx.replyWithHTML('Меню возврата', Markup.inlineKeyboard(
-      [
-        [Markup.button.callback('Вернуться в меню 🔙', 'menu')],
-      ]
-    ));
+    await backToMenu(ctx);
   } catch (e) {
     console.log(e);
   }
@@ -364,11 +369,7 @@ bot.action('myTasks', async (ctx) => {
   try {
     await ctx.answerCbQuery();
     await myTasks(ctx);
-    await ctx.replyWithHTML('Меню возврата', Markup.inlineKeyboard(
-      [
-        [Markup.button.callback('Вернуться в меню 🔙', 'menu')],
-      ]
-    ));
+    await backToMenu(ctx);
   } catch (e) {
     console.log(e);
   }
