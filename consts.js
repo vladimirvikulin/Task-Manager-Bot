@@ -12,7 +12,7 @@ const commands = `
 /myGroups - Посмотреть твои группы
 /addGroup - Добавить группу
 /deleteGroup - Удалить группу
-/date - Посмотреть дату
+/date - Посмотреть время
 `;
 
 module.exports = { commands };

@@ -98,13 +98,17 @@ bot.command('deleteGroup', async (ctx) => {
   }
 });
 
+bot.command('time', async (ctx) => {
+  await ctx.reply(String(new Date()));
+});
+
 bot.command('menu', async (ctx) => {
   await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
     [
       [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
       [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
       [Markup.button.callback('Удалить группу 🗑️', 'deleteGroup'), Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
-      [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
+      [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить задачу 🔃', 'updateTask')],
     ]
   ));
 });
@@ -338,7 +342,7 @@ bot.action('menu', async (ctx) => {
         [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
         [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
         [Markup.button.callback('Удалить группу 🗑️', 'deleteGroup'), Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
-        [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить статус задачи 🔃', 'updateTask')],
+        [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить задачу 🔃', 'updateTask')],
       ]
     ));
   } catch (e) {
