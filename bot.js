@@ -102,6 +102,10 @@ bot.command('time', async (ctx) => {
   await ctx.reply(String(new Date()));
 });
 
+bot.command('info', async (ctx) => {
+  ctx.reply(myConsts.info);
+});
+
 bot.command('menu', async (ctx) => {
   await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
     [
