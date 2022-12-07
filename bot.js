@@ -220,18 +220,24 @@ async function myGroups(ctx) {
       resolve(userLocalObj.groups);
     }, 300);
   });
-  let listGroups = '';
+  let groupList = '';
   for (let i = 0; i < groups.length; i++) {
     if (i === userLocalObj.activeGroup) {
-      listGroups += `${i + 1}. ${groups[i].groupName} 🟢\n`;
+      groupList += `${i + 1}. ${groups[i].groupName} 🟢\n`;
     } else {
-      listGroups += `${i + 1}. ${groups[i].groupName}\n`;
+      groupList += `${i + 1}. ${groups[i].groupName}\n`;
     }
   }
-  await ctx.replyWithHTML(
-    '<b>Список ваших групп:</b>\n\n' +
-    `${listGroups}`
-  );
+  if (groupList === '') {
+    await ctx.replyWithHTML(
+      '<b>Список ваших групп пуст</b>'
+    );
+  } else {
+    await ctx.replyWithHTML(
+      '<b>Список ваших групп:</b>\n\n' +
+      `${groupList}`
+    );
+  }
 }
 
 async function chooseGroup(ctx) {
@@ -253,19 +259,19 @@ async function myTasks(ctx) {
       resolve(userLocalObj.groups[userLocalObj.activeGroup].tasks);
     }, 300);
   });
-  let result = '';
+  let taskList = '';
   for (let i = 0; i < tasks.length; i++) {
-    if (tasks[i].isCompleted)  result += `${i + 1}. ${tasks[i].taskName} ✅\n`;
-    else result += `${i + 1}. ${tasks[i].taskName} 🔴\n`;
+    if (tasks[i].isCompleted)  taskList += `${i + 1}. ${tasks[i].taskName} ✅\n`;
+    else taskList += `${i + 1}. ${tasks[i].taskName} 🔴\n`;
   }
-  if (result === '') {
-    ctx.replyWithHTML(
+  if (taskList === '') {
+    await ctx.replyWithHTML(
       '<b>Список ваших задач пуст</b>'
     );
   } else {
-    ctx.replyWithHTML(
+    await ctx.replyWithHTML(
       '<b>Список ваших задач:</b>\n\n' +
-      `${result}`
+      `${taskList}`
     );
   }
 }
