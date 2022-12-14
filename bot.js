@@ -120,6 +120,10 @@ bot.command('menu', async (ctx) => {
 bot.on('text', async (ctx) => {
   userLocalObj.text = ctx.message.text;
   if (userLocalObj.action === 'addTask') {
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply('Для начала создай группу /addGroup');
+      return;
+    }
     await ctx.replyWithHTML(
       'Вы действительно хотите добавить задачу:\n\n' +
         `<i>${ctx.message.text}</i>`,
@@ -127,6 +131,10 @@ bot.on('text', async (ctx) => {
     );
   } else if (userLocalObj.action === 'deleteTask') {
     userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply('Для начала создай группу /addGroup');
+      return;
+    }
     if (Number.isNaN(userLocalObj.taskId)) {
       await ctx.reply('Ты написал не цифру, попробуй еще раз');
       return;
@@ -142,6 +150,10 @@ bot.on('text', async (ctx) => {
     );
   } else if (userLocalObj.action === 'isCompleted') {
     userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply('Для начала создай группу /addGroup');
+      return;
+    }
     await ctx.replyWithHTML(
       'Вы действительно хотите установить или убрать отметку готовности задачи №' +
       `<i>${userLocalObj.taskId + 1}</i>`,
