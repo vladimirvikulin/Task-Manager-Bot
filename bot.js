@@ -19,8 +19,6 @@ const userLocalObj = {
   activeGroup: 0,
 };
 
-//Commands
-
 bot.start(async (ctx) => {
   await ctx.reply(`Привет ${ctx.message.from.first_name}, этот бот создан для планировки задач.\nНапиши команду /help, чтобы узнать команды бота.`);
   const userExists = await users.find({ username: ctx.message.from.username });
@@ -29,173 +27,6 @@ bot.start(async (ctx) => {
       chatId: `${ctx.chat.id}`,
       activeGroup: 0,
       groups: [] });
-  }
-});
-
-bot.help((ctx) => ctx.reply(myConsts.commands));
-
-bot.command('addTask', async (ctx) => {
-  try {
-    await addTask(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-bot.command('myTasks', async (ctx) => {
-  try {
-    await myTasks(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-bot.command('deleteTask', async (ctx) => {
-  try {
-    await deleteTask(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-bot.command('updateTask', async (ctx) => {
-  try {
-    await isCompleted(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-bot.command('chooseGroup', async (ctx) => {
-  try {
-    await chooseGroup(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-bot.command('myGroups', async (ctx) => {
-  try {
-    await myGroups(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-bot.command('addGroup', async (ctx) => {
-  try {
-    await addGroup(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-bot.command('deleteGroup', async (ctx) => {
-  try {
-    await deleteGroup(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-bot.command('time', async (ctx) => {
-  await ctx.reply(String(new Date()));
-});
-
-bot.command('info', async (ctx) => {
-  ctx.reply(myConsts.info);
-});
-
-bot.command('menu', async (ctx) => {
-  await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
-    [
-      [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
-      [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
-      [Markup.button.callback('Удалить группу 🗑️', 'deleteGroup'), Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
-      [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить задачу 🔃', 'updateTask')],
-    ]
-  ));
-});
-
-bot.on('text', async (ctx) => {
-  userLocalObj.text = ctx.message.text;
-  if (userLocalObj.action === 'addTask') {
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply('Для начала создай группу /addGroup');
-      return;
-    }
-    await ctx.replyWithHTML(
-      'Вы действительно хотите добавить задачу:\n\n' +
-        `<i>${ctx.message.text}</i>`,
-      await yesNoKeyboard()
-    );
-  } else if (userLocalObj.action === 'deleteTask') {
-    userLocalObj.taskId = Number(ctx.message.text) - 1;
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply('Для начала создай группу /addGroup');
-      return;
-    }
-    if (Number.isNaN(userLocalObj.taskId)) {
-      await ctx.reply('Ты написал не цифру, попробуй еще раз');
-      return;
-    }
-    if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
-      await ctx.reply('Задачи с таким номером нет, попробуй еще раз');
-      return;
-    }
-    await ctx.replyWithHTML(
-      'Вы действительно хотите удалить задачу №' +
-      `<i>${userLocalObj.taskId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-  } else if (userLocalObj.action === 'isCompleted') {
-    userLocalObj.taskId = Number(ctx.message.text) - 1;
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply('Для начала создай группу /addGroup');
-      return;
-    }
-    await ctx.replyWithHTML(
-      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
-      `<i>${userLocalObj.taskId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-  } else if (userLocalObj.action === 'addGroup') {
-    await ctx.replyWithHTML(
-      'Вы действительно хотите добавить группу задач ' +
-      `<i>${userLocalObj.text}</i>`,
-      await yesNoKeyboard()
-    );
-  } else if (userLocalObj.action === 'chooseGroup') {
-    userLocalObj.groupId = Number(ctx.message.text) - 1;
-    if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply('Ты написал не цифру, попробуй еще раз');
-      return;
-    }
-    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
-      return;
-    }
-    userLocalObj.activeGroup = Number(ctx.message.text) - 1;
-    await ctx.reply('Вы успешно выбрали активную группу');
-    await updateDataBase(ctx);
-    await myGroups(ctx);
-  } else if (userLocalObj.action === 'deleteGroup') {
-    userLocalObj.groupId = Number(ctx.message.text) - 1;
-    if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply('Ты написал не цифру, попробуй еще раз');
-      return;
-    }
-    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
-      return;
-    }
-    await ctx.replyWithHTML(
-      'Вы действительно хотите удалить группу №' +
-      `<i>${userLocalObj.groupId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-  } else {
-    await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
   }
 });
 
@@ -327,6 +158,175 @@ async function backToMenu(ctx) {
   ));
 }
 
+//Commands
+
+bot.help((ctx) => ctx.reply(myConsts.commands));
+
+bot.on('text', async (ctx) => {
+  userLocalObj.text = ctx.message.text;
+  if (userLocalObj.action === 'addTask') {
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply('Для начала создай группу /addGroup');
+      return;
+    }
+    await ctx.replyWithHTML(
+      'Вы действительно хотите добавить задачу:\n\n' +
+        `<i>${ctx.message.text}</i>`,
+      await yesNoKeyboard()
+    );
+  } else if (userLocalObj.action === 'deleteTask') {
+    userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply('Для начала создай группу /addGroup');
+      return;
+    }
+    if (Number.isNaN(userLocalObj.taskId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
+      await ctx.reply('Задачи с таким номером нет, попробуй еще раз');
+      return;
+    }
+    await ctx.replyWithHTML(
+      'Вы действительно хотите удалить задачу №' +
+      `<i>${userLocalObj.taskId + 1}</i>`,
+      await yesNoKeyboard()
+    );
+  } else if (userLocalObj.action === 'isCompleted') {
+    userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply('Для начала создай группу /addGroup');
+      return;
+    }
+    await ctx.replyWithHTML(
+      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
+      `<i>${userLocalObj.taskId + 1}</i>`,
+      await yesNoKeyboard()
+    );
+  } else if (userLocalObj.action === 'addGroup') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите добавить группу задач ' +
+      `<i>${userLocalObj.text}</i>`,
+      await yesNoKeyboard()
+    );
+  } else if (userLocalObj.action === 'chooseGroup') {
+    userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      return;
+    }
+    userLocalObj.activeGroup = Number(ctx.message.text) - 1;
+    await ctx.reply('Вы успешно выбрали активную группу');
+    await updateDataBase(ctx);
+    await myGroups(ctx);
+  } else if (userLocalObj.action === 'deleteGroup') {
+    userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      return;
+    }
+    await ctx.replyWithHTML(
+      'Вы действительно хотите удалить группу №' +
+      `<i>${userLocalObj.groupId + 1}</i>`,
+      await yesNoKeyboard()
+    );
+  } else {
+    await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
+  }
+});
+
+bot.command('addTask', async (ctx) => {
+  try {
+    await addTask(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.command('myTasks', async (ctx) => {
+  try {
+    await myTasks(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.command('deleteTask', async (ctx) => {
+  try {
+    await deleteTask(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.command('updateTask', async (ctx) => {
+  try {
+    await isCompleted(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.command('chooseGroup', async (ctx) => {
+  try {
+    await chooseGroup(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.command('myGroups', async (ctx) => {
+  try {
+    await myGroups(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.command('addGroup', async (ctx) => {
+  try {
+    await addGroup(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.command('deleteGroup', async (ctx) => {
+  try {
+    await deleteGroup(ctx);
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.command('time', async (ctx) => {
+  await ctx.reply(String(new Date()));
+});
+
+bot.command('info', async (ctx) => {
+  ctx.reply(myConsts.info);
+});
+
+bot.command('menu', async (ctx) => {
+  await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
+    [
+      [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
+      [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
+      [Markup.button.callback('Удалить группу 🗑️', 'deleteGroup'), Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
+      [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить задачу 🔃', 'updateTask')],
+    ]
+  ));
+});
+
 //Button actions
 
 bot.action(['yes', 'no'], async (ctx) => {
@@ -446,7 +446,7 @@ bot.action('deleteGroup', async (ctx) => {
   }
 });
 
-bot.launch();
+bot.launch().then(() => console.log('Bot has successfully started!'));
 
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
