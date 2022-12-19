@@ -162,88 +162,6 @@ async function backToMenu(ctx) {
 
 bot.help((ctx) => ctx.reply(myConsts.commands));
 
-bot.on('text', async (ctx) => {
-  userLocalObj.text = ctx.message.text;
-  if (userLocalObj.action === 'addTask') {
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply('Для начала создай группу /addGroup');
-      return;
-    }
-    await ctx.replyWithHTML(
-      'Вы действительно хотите добавить задачу:\n\n' +
-        `<i>${ctx.message.text}</i>`,
-      await yesNoKeyboard()
-    );
-  } else if (userLocalObj.action === 'deleteTask') {
-    userLocalObj.taskId = Number(ctx.message.text) - 1;
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply('Для начала создай группу /addGroup');
-      return;
-    }
-    if (Number.isNaN(userLocalObj.taskId)) {
-      await ctx.reply('Ты написал не цифру, попробуй еще раз');
-      return;
-    }
-    if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
-      await ctx.reply('Задачи с таким номером нет, попробуй еще раз');
-      return;
-    }
-    await ctx.replyWithHTML(
-      'Вы действительно хотите удалить задачу №' +
-      `<i>${userLocalObj.taskId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-  } else if (userLocalObj.action === 'isCompleted') {
-    userLocalObj.taskId = Number(ctx.message.text) - 1;
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply('Для начала создай группу /addGroup');
-      return;
-    }
-    await ctx.replyWithHTML(
-      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
-      `<i>${userLocalObj.taskId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-  } else if (userLocalObj.action === 'addGroup') {
-    await ctx.replyWithHTML(
-      'Вы действительно хотите добавить группу задач ' +
-      `<i>${userLocalObj.text}</i>`,
-      await yesNoKeyboard()
-    );
-  } else if (userLocalObj.action === 'chooseGroup') {
-    userLocalObj.groupId = Number(ctx.message.text) - 1;
-    if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply('Ты написал не цифру, попробуй еще раз');
-      return;
-    }
-    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
-      return;
-    }
-    userLocalObj.activeGroup = Number(ctx.message.text) - 1;
-    await ctx.reply('Вы успешно выбрали активную группу');
-    await updateDataBase(ctx);
-    await myGroups(ctx);
-  } else if (userLocalObj.action === 'deleteGroup') {
-    userLocalObj.groupId = Number(ctx.message.text) - 1;
-    if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply('Ты написал не цифру, попробуй еще раз');
-      return;
-    }
-    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
-      return;
-    }
-    await ctx.replyWithHTML(
-      'Вы действительно хотите удалить группу №' +
-      `<i>${userLocalObj.groupId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-  } else {
-    await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
-  }
-});
-
 bot.command('addTask', async (ctx) => {
   try {
     await addTask(ctx);
@@ -325,6 +243,88 @@ bot.command('menu', async (ctx) => {
       [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить задачу 🔃', 'updateTask')],
     ]
   ));
+});
+
+bot.on('text', async (ctx) => {
+  userLocalObj.text = ctx.message.text;
+  if (userLocalObj.action === 'addTask') {
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply('Для начала создай группу /addGroup');
+      return;
+    }
+    await ctx.replyWithHTML(
+      'Вы действительно хотите добавить задачу:\n\n' +
+        `<i>${ctx.message.text}</i>`,
+      await yesNoKeyboard()
+    );
+  } else if (userLocalObj.action === 'deleteTask') {
+    userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply('Для начала создай группу /addGroup');
+      return;
+    }
+    if (Number.isNaN(userLocalObj.taskId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
+      await ctx.reply('Задачи с таким номером нет, попробуй еще раз');
+      return;
+    }
+    await ctx.replyWithHTML(
+      'Вы действительно хотите удалить задачу №' +
+      `<i>${userLocalObj.taskId + 1}</i>`,
+      await yesNoKeyboard()
+    );
+  } else if (userLocalObj.action === 'isCompleted') {
+    userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply('Для начала создай группу /addGroup');
+      return;
+    }
+    await ctx.replyWithHTML(
+      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
+      `<i>${userLocalObj.taskId + 1}</i>`,
+      await yesNoKeyboard()
+    );
+  } else if (userLocalObj.action === 'addGroup') {
+    await ctx.replyWithHTML(
+      'Вы действительно хотите добавить группу задач ' +
+      `<i>${userLocalObj.text}</i>`,
+      await yesNoKeyboard()
+    );
+  } else if (userLocalObj.action === 'chooseGroup') {
+    userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      return;
+    }
+    userLocalObj.activeGroup = Number(ctx.message.text) - 1;
+    await ctx.reply('Вы успешно выбрали активную группу');
+    await updateDataBase(ctx);
+    await myGroups(ctx);
+  } else if (userLocalObj.action === 'deleteGroup') {
+    userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      return;
+    }
+    await ctx.replyWithHTML(
+      'Вы действительно хотите удалить группу №' +
+      `<i>${userLocalObj.groupId + 1}</i>`,
+      await yesNoKeyboard()
+    );
+  } else {
+    await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
+  }
 });
 
 //Button actions
