@@ -243,15 +243,22 @@ bot.on('text', async (ctx) => {
     if (userLocalObj.groups.length === 0) {
       ctx.reply(myConsts.addGroupFirst);
       return;
+    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
+      ctx.reply(myConsts.noChosenGroup);
+      return;
     }
     await ctx.replyWithHTML(
       myConsts.isAddTask + `<i>${ctx.message.text}</i>`,
       await yesNoKeyboard()
     );
+
   } else if (userLocalObj.action === 'deleteTask') {
     userLocalObj.taskId = Number(ctx.message.text) - 1;
     if (userLocalObj.groups.length === 0) {
       ctx.reply(myConsts.addGroupFirst);
+      return;
+    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
+      ctx.reply(myConsts.noChosenGroup);
       return;
     }
     if (Number.isNaN(userLocalObj.taskId)) {
@@ -266,21 +273,27 @@ bot.on('text', async (ctx) => {
       myConsts.isTaskDelete + `<i>${userLocalObj.taskId + 1}</i>`,
       await yesNoKeyboard()
     );
+
   } else if (userLocalObj.action === 'isCompleted') {
     userLocalObj.taskId = Number(ctx.message.text) - 1;
     if (userLocalObj.groups.length === 0) {
       ctx.reply(myConsts.addGroupFirst);
+      return;
+    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
+      ctx.reply(myConsts.noChosenGroup);
       return;
     }
     await ctx.replyWithHTML(
       myConsts.isCompletedSure + `<i>${userLocalObj.taskId + 1}</i>`,
       await yesNoKeyboard()
     );
+
   } else if (userLocalObj.action === 'addGroup') {
     await ctx.replyWithHTML(
       myConsts.isAddGroup + `<i>${userLocalObj.text}</i>`,
       await yesNoKeyboard()
     );
+
   } else if (userLocalObj.action === 'chooseGroup') {
     userLocalObj.groupId = Number(ctx.message.text) - 1;
     if (Number.isNaN(userLocalObj.groupId)) {
@@ -295,6 +308,7 @@ bot.on('text', async (ctx) => {
     await ctx.reply(myConsts.successfullyChooseGroup);
     await updateDataBase(ctx);
     await myGroups(ctx);
+
   } else if (userLocalObj.action === 'deleteGroup') {
     userLocalObj.groupId = Number(ctx.message.text) - 1;
     if (Number.isNaN(userLocalObj.groupId)) {
@@ -310,6 +324,7 @@ bot.on('text', async (ctx) => {
       `<i>${userLocalObj.groupId + 1}</i>`,
       await yesNoKeyboard()
     );
+
   } else {
     await ctx.reply(myConsts.unknownCommand);
   }

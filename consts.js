@@ -51,6 +51,7 @@ const successfullyDeleteTask = 'Ваша задача успешно удале�
 const successfullyIsCompleted = 'Статус вашей задачи успешно обновлен';
 const successfullyAddGroup = 'Группа успешно добавлена';
 const successfullyDeleteGroup = 'Группа успешно удалена';
+const noChosenGroup = 'Выберите активную группу';
 module.exports = {
   commands,
   info,
@@ -81,5 +82,6 @@ module.exports = {
   successfullyIsCompleted,
   successfullyAddGroup,
   successfullyDeleteGroup,
+  noChosenGroup,
 };
 
