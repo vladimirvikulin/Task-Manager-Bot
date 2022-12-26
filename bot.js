@@ -20,7 +20,7 @@ const userLocalObj = {
 };
 
 bot.start(async (ctx) => {
-  await ctx.reply(`Привет ${ctx.message.from.first_name}, этот бот создан для планировки задач.\nНапиши команду /help, чтобы узнать команды бота.`);
+  await ctx.reply(`${myConsts.start(ctx)}`);
   const userExists = await users.find({ username: ctx.message.from.username });
   if (userExists === null) {
     users.create({ username: `${ctx.message.from.username}`,
@@ -52,7 +52,7 @@ async function updateDataBase(ctx) {
 
 async function addGroup(ctx) {
   updateLocalData(ctx);
-  await ctx.reply('Напишите группу');
+  await ctx.reply(myConsts.addGroup);
   userLocalObj.action = 'addGroup';
 }
 
@@ -73,11 +73,11 @@ async function myGroups(ctx) {
   }
   if (groupList === '') {
     await ctx.replyWithHTML(
-      '<b>Список ваших групп пуст</b>'
+      myConsts.myGroupsEmpty
     );
   } else {
     await ctx.replyWithHTML(
-      '<b>Список ваших групп:</b>\n\n' +
+      myConsts.myGroups +
       `${groupList}`
     );
   }
@@ -85,13 +85,13 @@ async function myGroups(ctx) {
 
 async function chooseGroup(ctx) {
   await myGroups(ctx);
-  await ctx.reply('Введите номер группы, чтобы выбрать активную группу');
+  await ctx.reply(myConsts.chooseGroup);
   userLocalObj.action = 'chooseGroup';
 }
 
 async function addTask(ctx) {
   updateLocalData(ctx);
-  await ctx.reply('Напишите задачу');
+  await ctx.reply(myConsts.addTask);
   userLocalObj.action = 'addTask';
 }
 
@@ -108,12 +108,10 @@ async function myTasks(ctx) {
     else taskList += `${i + 1}. ${tasks[i].taskName} 🔴\n`;
   }
   if (taskList === '') {
-    await ctx.replyWithHTML(
-      '<b>Список ваших задач пуст</b>'
-    );
+    await ctx.replyWithHTML(myConsts.myTasksEmpty);
   } else {
     await ctx.replyWithHTML(
-      '<b>Список ваших задач:</b>\n\n' +
+      myConsts.myTasks +
       `${taskList}`
     );
   }
@@ -121,25 +119,19 @@ async function myTasks(ctx) {
 
 async function deleteGroup(ctx) {
   updateLocalData(ctx);
-  await ctx.replyWithHTML(
-    'Введите порядковый номер группы, например <b> "5" </b>,чтобы удалить группу №5'
-  );
+  await ctx.replyWithHTML(myConsts.deleteGroup);
   userLocalObj.action = 'deleteGroup';
 }
 
 async function deleteTask(ctx) {
   updateLocalData(ctx);
-  await ctx.replyWithHTML(
-    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы удалить задачу №5'
-  );
+  await ctx.replyWithHTML(myConsts.deleteTask);
   userLocalObj.action = 'deleteTask';
 }
 
 async function isCompleted(ctx) {
   updateLocalData(ctx);
-  await ctx.replyWithHTML(
-    'Введите порядковый номер задачи, например <b> "5" </b>,чтобы обновить статус задачи №5'
-  );
+  await ctx.replyWithHTML(myConsts.isCompleted);
   userLocalObj.action = 'isCompleted';
 }
 
@@ -249,81 +241,77 @@ bot.on('text', async (ctx) => {
   userLocalObj.text = ctx.message.text;
   if (userLocalObj.action === 'addTask') {
     if (userLocalObj.groups.length === 0) {
-      ctx.reply('Для начала создай группу /addGroup');
+      ctx.reply(myConsts.addGroupFirst);
       return;
     }
     await ctx.replyWithHTML(
-      'Вы действительно хотите добавить задачу:\n\n' +
-        `<i>${ctx.message.text}</i>`,
+      myConsts.isAddTask + `<i>${ctx.message.text}</i>`,
       await yesNoKeyboard()
     );
   } else if (userLocalObj.action === 'deleteTask') {
     userLocalObj.taskId = Number(ctx.message.text) - 1;
     if (userLocalObj.groups.length === 0) {
-      ctx.reply('Для начала создай группу /addGroup');
+      ctx.reply(myConsts.addGroupFirst);
       return;
     }
     if (Number.isNaN(userLocalObj.taskId)) {
-      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      await ctx.reply(myConsts.notNumber);
       return;
     }
     if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
-      await ctx.reply('Задачи с таким номером нет, попробуй еще раз');
+      await ctx.reply(myConsts.noTask);
       return;
     }
     await ctx.replyWithHTML(
-      'Вы действительно хотите удалить задачу №' +
-      `<i>${userLocalObj.taskId + 1}</i>`,
+      myConsts.isTaskDelete + `<i>${userLocalObj.taskId + 1}</i>`,
       await yesNoKeyboard()
     );
   } else if (userLocalObj.action === 'isCompleted') {
     userLocalObj.taskId = Number(ctx.message.text) - 1;
     if (userLocalObj.groups.length === 0) {
-      ctx.reply('Для начала создай группу /addGroup');
+      ctx.reply(myConsts.addGroupFirst);
       return;
     }
     await ctx.replyWithHTML(
-      'Вы действительно хотите установить или убрать отметку готовности задачи №' +
-      `<i>${userLocalObj.taskId + 1}</i>`,
+      myConsts.isCompletedSure + `<i>${userLocalObj.taskId + 1}</i>`,
       await yesNoKeyboard()
     );
   } else if (userLocalObj.action === 'addGroup') {
     await ctx.replyWithHTML(
-      'Вы действительно хотите добавить группу задач ' +
-      `<i>${userLocalObj.text}</i>`,
+      myConsts.isAddGroup + `<i>${userLocalObj.text}</i>`,
       await yesNoKeyboard()
     );
   } else if (userLocalObj.action === 'chooseGroup') {
     userLocalObj.groupId = Number(ctx.message.text) - 1;
     if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      await ctx.reply(myConsts.notNumber);
       return;
     }
     if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      await ctx.reply(myConsts.noGroup);
       return;
     }
     userLocalObj.activeGroup = Number(ctx.message.text) - 1;
-    await ctx.reply('Вы успешно выбрали активную группу');
+    await ctx.reply(myConsts.successfullyChooseGroup);
     await updateDataBase(ctx);
     await myGroups(ctx);
   } else if (userLocalObj.action === 'deleteGroup') {
     userLocalObj.groupId = Number(ctx.message.text) - 1;
     if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply('Ты написал не цифру, попробуй еще раз');
+      await ctx.reply(myConsts.notNumber);
       return;
     }
     if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply('Группы с таким номером нет, попробуй еще раз');
+      await ctx.reply(myConsts.noGroup);
       return;
     }
     await ctx.replyWithHTML(
-      'Вы действительно хотите удалить группу №' +
+      myConsts.isDeleteGroup +
       `<i>${userLocalObj.groupId + 1}</i>`,
       await yesNoKeyboard()
     );
   } else {
-    await ctx.reply('Неизвестная команда, напишите /help, чтоб узнать список команд');
+    await ctx.reply(myConsts.unknownCommand);
   }
 });
 
@@ -333,21 +321,21 @@ bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
   if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addTask') {
     userLocalObj.groups[userLocalObj.activeGroup].tasks.push({ taskName: userLocalObj.text, isCompleted: false });
-    await ctx.editMessageText('Ваша задача успешно добавлена');
+    await ctx.editMessageText(myConsts.successfullyAddTask);
   } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteTask') {
     userLocalObj.groups[userLocalObj.activeGroup].tasks.splice(userLocalObj.id, 1);
-    await ctx.editMessageText('Ваша задача успешно удалена');
+    await ctx.editMessageText(myConsts.successfullyDeleteTask);
   } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'isCompleted') {
     let isCompleted = userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted;
     isCompleted = !isCompleted;
     userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted = isCompleted;
-    await ctx.editMessageText('Статус вашей задачи успешно обновлен');
+    await ctx.editMessageText(myConsts.successfullyIsCompleted);
   } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addGroup') {
     userLocalObj.groups.push({ tasks: [], groupName: userLocalObj.text });
-    await ctx.editMessageText('Группа успешно добавлена');
+    await ctx.editMessageText(myConsts.successfullyAddGroup);
   } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteGroup') {
     userLocalObj.groups.splice(userLocalObj.groupId, 1);
-    await ctx.editMessageText('Группа успешно удалена');
+    await ctx.editMessageText(myConsts.successfullyDeleteGroup);
   } else {
     await ctx.deleteMessage();
   }
