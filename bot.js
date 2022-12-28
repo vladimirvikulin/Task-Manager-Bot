@@ -265,6 +265,49 @@ async function noAction(ctx) {
   } else return;
 }
 
+async function addTaskCheck(ctx) {
+  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addTask') {
+    userLocalObj.groups[userLocalObj.activeGroup].tasks.push({ taskName: userLocalObj.text, isCompleted: false });
+    await ctx.editMessageText(myConsts.successfullyAddTask);
+  } else return;
+}
+
+async function deleteTaskCheck(ctx) {
+  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteTask') {
+    userLocalObj.groups[userLocalObj.activeGroup].tasks.splice(userLocalObj.id, 1);
+    await ctx.editMessageText(myConsts.successfullyDeleteTask);
+  } else return;
+}
+
+async function isCompletedCheck(ctx) {
+  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'isCompleted') {
+    let isCompleted = userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted;
+    isCompleted = !isCompleted;
+    userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted = isCompleted;
+    await ctx.editMessageText(myConsts.successfullyIsCompleted);
+  } else return;
+}
+
+async function addGroupCheck(ctx) {
+  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addGroup') {
+    userLocalObj.groups.push({ tasks: [], groupName: userLocalObj.text });
+    await ctx.editMessageText(myConsts.successfullyAddGroup);
+  } else return;
+}
+
+async function deleteGroupCheck(ctx) {
+  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteGroup') {
+    userLocalObj.groups.splice(userLocalObj.groupId, 1);
+    await ctx.editMessageText(myConsts.successfullyDeleteGroup);
+  } else return;
+}
+
+async function actionNoCheck(ctx) {
+  if (ctx.callbackQuery.data === 'no') {
+    await ctx.deleteMessage();
+  } else return;
+}
+
 //Commands
 
 bot.help((ctx) => ctx.reply(myConsts.commands));
@@ -366,26 +409,12 @@ bot.on('text', async (ctx) => {
 
 bot.action(['yes', 'no'], async (ctx) => {
   await ctx.answerCbQuery();
-  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addTask') {
-    userLocalObj.groups[userLocalObj.activeGroup].tasks.push({ taskName: userLocalObj.text, isCompleted: false });
-    await ctx.editMessageText(myConsts.successfullyAddTask);
-  } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteTask') {
-    userLocalObj.groups[userLocalObj.activeGroup].tasks.splice(userLocalObj.id, 1);
-    await ctx.editMessageText(myConsts.successfullyDeleteTask);
-  } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'isCompleted') {
-    let isCompleted = userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted;
-    isCompleted = !isCompleted;
-    userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted = isCompleted;
-    await ctx.editMessageText(myConsts.successfullyIsCompleted);
-  } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addGroup') {
-    userLocalObj.groups.push({ tasks: [], groupName: userLocalObj.text });
-    await ctx.editMessageText(myConsts.successfullyAddGroup);
-  } else if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteGroup') {
-    userLocalObj.groups.splice(userLocalObj.groupId, 1);
-    await ctx.editMessageText(myConsts.successfullyDeleteGroup);
-  } else {
-    await ctx.deleteMessage();
-  }
+  await addTaskCheck(ctx);
+  await deleteTaskCheck(ctx);
+  await isCompletedCheck(ctx);
+  await addGroupCheck(ctx);
+  await deleteGroupCheck(ctx);
+  await actionNoCheck(ctx);
   await backToMenu(ctx);
   await updateDataBase(ctx);
   userLocalObj.action = '';
