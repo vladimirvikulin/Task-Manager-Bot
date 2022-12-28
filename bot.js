@@ -150,6 +150,117 @@ async function backToMenu(ctx) {
   ));
 }
 
+async function addTaskAction(ctx) {
+  userLocalObj.text = ctx.message.text;
+  if (userLocalObj.action === 'addTask') {
+    if (userLocalObj.groups.length === 0) {
+      await ctx.reply(myConsts.addGroupFirst);
+      return;
+    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
+      await ctx.reply(myConsts.noChosenGroup);
+      return;
+    }
+    await ctx.replyWithHTML(
+      myConsts.isAddTask + `<i>${ctx.message.text}</i>`,
+      await yesNoKeyboard()
+    );
+  } else return;
+}
+
+async function deleteTaskAction(ctx) {
+  if (userLocalObj.action === 'deleteTask') {
+    userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (userLocalObj.groups.length === 0) {
+      await ctx.reply(myConsts.addGroupFirst);
+      return;
+    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
+      await ctx.reply(myConsts.noChosenGroup);
+      return;
+    }
+    if (Number.isNaN(userLocalObj.taskId)) {
+      await ctx.reply(myConsts.notNumber);
+      return;
+    }
+    if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
+      await ctx.reply(myConsts.noTask);
+      return;
+    }
+    await ctx.replyWithHTML(
+      myConsts.isTaskDelete + `<i>${userLocalObj.taskId + 1}</i>`,
+      await yesNoKeyboard()
+    );
+  } else return;
+}
+
+async function isCompletedAction(ctx) {
+  if (userLocalObj.action === 'isCompleted') {
+    userLocalObj.taskId = Number(ctx.message.text) - 1;
+    if (userLocalObj.groups.length === 0) {
+      ctx.reply(myConsts.addGroupFirst);
+      return;
+    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
+      ctx.reply(myConsts.noChosenGroup);
+      return;
+    }
+    await ctx.replyWithHTML(
+      myConsts.isCompletedSure + `<i>${userLocalObj.taskId + 1}</i>`,
+      await yesNoKeyboard()
+    );
+  } else return;
+}
+
+async function addGroupAction(ctx) {
+  if (userLocalObj.action === 'addGroup') {
+    await ctx.replyWithHTML(
+      myConsts.isAddGroup + `<i>${userLocalObj.text}</i>`,
+      await yesNoKeyboard()
+    );
+  } else return;
+}
+
+async function chooseGroupAction(ctx) {
+  if (userLocalObj.action === 'chooseGroup') {
+    userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply(myConsts.notNumber);
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply(myConsts.noGroup);
+      return;
+    }
+    userLocalObj.activeGroup = Number(ctx.message.text) - 1;
+    await ctx.reply(myConsts.successfullyChooseGroup);
+    await updateDataBase(ctx);
+    await myGroups(ctx);
+  } else return;
+}
+
+async function deleteGroupAction(ctx) {
+  if (userLocalObj.action === 'deleteGroup') {
+    userLocalObj.groupId = Number(ctx.message.text) - 1;
+    if (Number.isNaN(userLocalObj.groupId)) {
+      await ctx.reply(myConsts.notNumber);
+      return;
+    }
+    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+      await ctx.reply(myConsts.noGroup);
+      return;
+    }
+    await ctx.replyWithHTML(
+      myConsts.isDeleteGroup +
+      `<i>${userLocalObj.groupId + 1}</i>`,
+      await yesNoKeyboard()
+    );
+  } else return;
+}
+
+async function noAction(ctx) {
+  if (userLocalObj.action === '') {
+    await ctx.reply(myConsts.unknownCommand);
+  } else return;
+}
+
 //Commands
 
 bot.help((ctx) => ctx.reply(myConsts.commands));
@@ -238,96 +349,13 @@ bot.command('menu', async (ctx) => {
 });
 
 bot.on('text', async (ctx) => {
-  userLocalObj.text = ctx.message.text;
-  if (userLocalObj.action === 'addTask') {
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply(myConsts.addGroupFirst);
-      return;
-    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
-      ctx.reply(myConsts.noChosenGroup);
-      return;
-    }
-    await ctx.replyWithHTML(
-      myConsts.isAddTask + `<i>${ctx.message.text}</i>`,
-      await yesNoKeyboard()
-    );
-
-  } else if (userLocalObj.action === 'deleteTask') {
-    userLocalObj.taskId = Number(ctx.message.text) - 1;
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply(myConsts.addGroupFirst);
-      return;
-    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
-      ctx.reply(myConsts.noChosenGroup);
-      return;
-    }
-    if (Number.isNaN(userLocalObj.taskId)) {
-      await ctx.reply(myConsts.notNumber);
-      return;
-    }
-    if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
-      await ctx.reply(myConsts.noTask);
-      return;
-    }
-    await ctx.replyWithHTML(
-      myConsts.isTaskDelete + `<i>${userLocalObj.taskId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-
-  } else if (userLocalObj.action === 'isCompleted') {
-    userLocalObj.taskId = Number(ctx.message.text) - 1;
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply(myConsts.addGroupFirst);
-      return;
-    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
-      ctx.reply(myConsts.noChosenGroup);
-      return;
-    }
-    await ctx.replyWithHTML(
-      myConsts.isCompletedSure + `<i>${userLocalObj.taskId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-
-  } else if (userLocalObj.action === 'addGroup') {
-    await ctx.replyWithHTML(
-      myConsts.isAddGroup + `<i>${userLocalObj.text}</i>`,
-      await yesNoKeyboard()
-    );
-
-  } else if (userLocalObj.action === 'chooseGroup') {
-    userLocalObj.groupId = Number(ctx.message.text) - 1;
-    if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply(myConsts.notNumber);
-      return;
-    }
-    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply(myConsts.noGroup);
-      return;
-    }
-    userLocalObj.activeGroup = Number(ctx.message.text) - 1;
-    await ctx.reply(myConsts.successfullyChooseGroup);
-    await updateDataBase(ctx);
-    await myGroups(ctx);
-
-  } else if (userLocalObj.action === 'deleteGroup') {
-    userLocalObj.groupId = Number(ctx.message.text) - 1;
-    if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply(myConsts.notNumber);
-      return;
-    }
-    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply(myConsts.noGroup);
-      return;
-    }
-    await ctx.replyWithHTML(
-      myConsts.isDeleteGroup +
-      `<i>${userLocalObj.groupId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-
-  } else {
-    await ctx.reply(myConsts.unknownCommand);
-  }
+  await addTaskAction(ctx);
+  await deleteTaskAction(ctx);
+  await isCompletedAction(ctx);
+  await addGroupAction(ctx);
+  await chooseGroupAction(ctx);
+  await deleteGroupAction(ctx);
+  await noAction(ctx);
 });
 
 //Button actions
