@@ -24,18 +24,18 @@ $ npm run dev
 
 ## Available commands
 
-/start - Restart bot
-/help - Command list
-/info - Bot information
-/menu - Task manager menu
-/myTasks - View tasks
-/addTask - Add task
-/deleteTask - Delete task
-/updateTask - Update task status
-/chooseGroup - Select active group
-/myGroups - View your groups
-/addGroup - Add group
-/deleteGroup - Delete group
-/date - View time
+/start - Restart bot  
+/help - Command list  
+/info - Bot information  
+/menu - Task manager menu  
+/myTasks - View tasks  
+/addTask - Add task  
+/deleteTask - Delete task  
+/updateTask - Update task status  
+/chooseGroup - Select active group  
+/myGroups - View your groups  
+/addGroup - Add group  
+/deleteGroup - Delete group  
+/date - View time  
 
 

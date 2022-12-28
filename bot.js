@@ -96,6 +96,10 @@ async function addTask(ctx) {
 }
 
 async function myTasks(ctx) {
+  if (userLocalObj.groups.length === 0) {
+    await ctx.reply(myConsts.addGroupFirst);
+    return;
+  }
   updateLocalData(ctx);
   const tasks = await new Promise((resolve) => {
     setTimeout(() => {
