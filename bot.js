@@ -8,7 +8,6 @@ const {
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const { connectDatabase, users } = require('./db.js');
 const myConsts = require('./consts');
-connectDatabase();
 let objDataBase;
 const userLocalObj = {
   groups: [],
@@ -19,18 +18,13 @@ const userLocalObj = {
   activeGroup: 0,
 };
 
-bot.start(async (ctx) => {
-  await ctx.reply(`${myConsts.start(ctx)}`);
-  const userExists = await users.find({ username: ctx.message.from.username });
-  if (userExists === null) {
-    users.create({ username: `${ctx.message.from.username}`,
-      chatId: `${ctx.chat.id}`,
-      activeGroup: 0,
-      groups: [] });
-  }
-});
-
 //Functions
+
+(async function startBot() {
+  await connectDatabase();
+  await setCommands();
+  await setActions();
+})();
 
 async function updateLocalData(ctx) {
   objDataBase = await users.find({ chatId: String(ctx.chat.id) });
@@ -51,13 +45,13 @@ async function updateDataBase(ctx) {
 }
 
 async function addGroup(ctx) {
-  updateLocalData(ctx);
+  await updateLocalData(ctx);
   await ctx.reply(myConsts.addGroup);
   userLocalObj.action = 'addGroup';
 }
 
 async function myGroups(ctx) {
-  updateLocalData(ctx);
+  await updateLocalData(ctx);
   const groups = await new Promise((resolve) => {
     setTimeout(() => {
       resolve(userLocalObj.groups);
@@ -90,17 +84,16 @@ async function chooseGroup(ctx) {
 }
 
 async function addTask(ctx) {
-  updateLocalData(ctx);
+  await updateLocalData(ctx);
   await ctx.reply(myConsts.addTask);
   userLocalObj.action = 'addTask';
 }
-
 async function myTasks(ctx) {
+  await updateLocalData(ctx);
   if (userLocalObj.groups.length === 0) {
     await ctx.reply(myConsts.addGroupFirst);
     return;
   }
-  updateLocalData(ctx);
   const tasks = await new Promise((resolve) => {
     setTimeout(() => {
       resolve(userLocalObj.groups[userLocalObj.activeGroup].tasks);
@@ -122,19 +115,19 @@ async function myTasks(ctx) {
 }
 
 async function deleteGroup(ctx) {
-  updateLocalData(ctx);
+  await updateLocalData(ctx);
   await ctx.replyWithHTML(myConsts.deleteGroup);
   userLocalObj.action = 'deleteGroup';
 }
 
 async function deleteTask(ctx) {
-  updateLocalData(ctx);
+  await updateLocalData(ctx);
   await ctx.replyWithHTML(myConsts.deleteTask);
   userLocalObj.action = 'deleteTask';
 }
 
 async function isCompleted(ctx) {
-  updateLocalData(ctx);
+  await updateLocalData(ctx);
   await ctx.replyWithHTML(myConsts.isCompleted);
   userLocalObj.action = 'isCompleted';
 }
@@ -310,119 +303,94 @@ async function actionNoCheck(ctx) {
 
 //Commands
 
-bot.help((ctx) => ctx.reply(myConsts.commands));
+async function setCommands() {
 
-bot.command('addTask', async (ctx) => {
-  try {
-    await addTask(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.start(async (ctx) => {
+    await ctx.reply(`${myConsts.start(ctx)}`);
+    const userExists = await users.find({ username: ctx.message.from.username });
+    if (userExists === null) {
+      users.create({ username: `${ctx.message.from.username}`,
+        chatId: `${ctx.chat.id}`,
+        activeGroup: 0,
+        groups: [] });
+    }
+  });
 
-bot.command('myTasks', async (ctx) => {
-  try {
-    await myTasks(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.help((ctx) => ctx.reply(myConsts.commands));
 
-bot.command('deleteTask', async (ctx) => {
-  try {
-    await deleteTask(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.command('addTask', async (ctx) => {
+    try {
+      await addTask(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.command('updateTask', async (ctx) => {
-  try {
-    await isCompleted(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.command('myTasks', async (ctx) => {
+    try {
+      await myTasks(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.command('chooseGroup', async (ctx) => {
-  try {
-    await chooseGroup(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.command('deleteTask', async (ctx) => {
+    try {
+      await deleteTask(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.command('myGroups', async (ctx) => {
-  try {
-    await myGroups(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.command('updateTask', async (ctx) => {
+    try {
+      await isCompleted(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.command('addGroup', async (ctx) => {
-  try {
-    await addGroup(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.command('chooseGroup', async (ctx) => {
+    try {
+      await chooseGroup(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.command('deleteGroup', async (ctx) => {
-  try {
-    await deleteGroup(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.command('myGroups', async (ctx) => {
+    try {
+      await myGroups(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.command('time', async (ctx) => {
-  await ctx.reply(String(new Date()));
-});
+  bot.command('addGroup', async (ctx) => {
+    try {
+      await addGroup(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.command('info', async (ctx) => {
-  ctx.reply(myConsts.info);
-});
+  bot.command('deleteGroup', async (ctx) => {
+    try {
+      await deleteGroup(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.command('menu', async (ctx) => {
-  await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
-    [
-      [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
-      [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
-      [Markup.button.callback('Удалить группу 🗑️', 'deleteGroup'), Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
-      [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить задачу 🔃', 'updateTask')],
-    ]
-  ));
-});
+  bot.command('time', async (ctx) => {
+    await ctx.reply(String(new Date()));
+  });
 
-bot.on('text', async (ctx) => {
-  await addTaskAction(ctx);
-  await deleteTaskAction(ctx);
-  await isCompletedAction(ctx);
-  await addGroupAction(ctx);
-  await chooseGroupAction(ctx);
-  await deleteGroupAction(ctx);
-  await noAction(ctx);
-});
+  bot.command('info', async (ctx) => {
+    ctx.reply(myConsts.info);
+  });
 
-//Button actions
-
-bot.action(['yes', 'no'], async (ctx) => {
-  await ctx.answerCbQuery();
-  await addTaskCheck(ctx);
-  await deleteTaskCheck(ctx);
-  await isCompletedCheck(ctx);
-  await addGroupCheck(ctx);
-  await deleteGroupCheck(ctx);
-  await actionNoCheck(ctx);
-  await backToMenu(ctx);
-  await updateDataBase(ctx);
-  userLocalObj.action = '';
-});
-
-bot.action('menu', async (ctx) => {
-  try {
-    await ctx.deleteMessage();
+  bot.command('menu', async (ctx) => {
     await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
       [
         [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
@@ -431,84 +399,126 @@ bot.action('menu', async (ctx) => {
         [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить задачу 🔃', 'updateTask')],
       ]
     ));
-  } catch (e) {
-    console.log(e);
-  }
-});
+  });
 
-bot.action('chooseGroup', async (ctx) => {
-  try {
-    await ctx.answerCbQuery();
-    await chooseGroup(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.on('text', async (ctx) => {
+    await addTaskAction(ctx);
+    await deleteTaskAction(ctx);
+    await isCompletedAction(ctx);
+    await addGroupAction(ctx);
+    await chooseGroupAction(ctx);
+    await deleteGroupAction(ctx);
+    await noAction(ctx);
+  });
+}
 
-bot.action('myGroups', async (ctx) => {
-  try {
+//Button actions
+
+async function setActions() {
+
+  bot.action(['yes', 'no'], async (ctx) => {
     await ctx.answerCbQuery();
-    await myGroups(ctx);
+    await addTaskCheck(ctx);
+    await deleteTaskCheck(ctx);
+    await isCompletedCheck(ctx);
+    await addGroupCheck(ctx);
+    await deleteGroupCheck(ctx);
+    await actionNoCheck(ctx);
     await backToMenu(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+    await updateDataBase(ctx);
+    userLocalObj.action = '';
+  });
 
-bot.action('myTasks', async (ctx) => {
-  try {
-    await ctx.answerCbQuery();
-    await myTasks(ctx);
-    await backToMenu(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.action('menu', async (ctx) => {
+    try {
+      await ctx.deleteMessage();
+      await ctx.replyWithHTML('<b>Меню планировщика</b>', Markup.inlineKeyboard(
+        [
+          [Markup.button.callback('Мои группы 📋', 'myGroups'), Markup.button.callback('Мои задачи 📋', 'myTasks')],
+          [Markup.button.callback('Добавить группу ✏️', 'addGroup'), Markup.button.callback('Добавить задачу ✏️', 'addTask')],
+          [Markup.button.callback('Удалить группу 🗑️', 'deleteGroup'), Markup.button.callback('Удалить задачу 🗑️', 'deleteTask')],
+          [Markup.button.callback('Выбрать группу 📋', 'chooseGroup'), Markup.button.callback('Обновить задачу 🔃', 'updateTask')],
+        ]
+      ));
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.action('addTask', async (ctx) => {
-  try {
-    await ctx.answerCbQuery();
-    await addTask(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.action('chooseGroup', async (ctx) => {
+    try {
+      await ctx.answerCbQuery();
+      await chooseGroup(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.action('deleteTask', async (ctx) => {
-  try {
-    await ctx.answerCbQuery();
-    await deleteTask(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.action('myGroups', async (ctx) => {
+    try {
+      await ctx.answerCbQuery();
+      await myGroups(ctx);
+      await backToMenu(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.action('updateTask', async (ctx) => {
-  try {
-    await ctx.answerCbQuery();
-    await isCompleted(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.action('myTasks', async (ctx) => {
+    try {
+      await ctx.answerCbQuery();
+      await myTasks(ctx);
+      await backToMenu(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.action('addGroup', async (ctx) => {
-  try {
-    await ctx.answerCbQuery();
-    await addGroup(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.action('addTask', async (ctx) => {
+    try {
+      await ctx.answerCbQuery();
+      await addTask(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
-bot.action('deleteGroup', async (ctx) => {
-  try {
-    await ctx.answerCbQuery();
-    await deleteGroup(ctx);
-  } catch (e) {
-    console.log(e);
-  }
-});
+  bot.action('deleteTask', async (ctx) => {
+    try {
+      await ctx.answerCbQuery();
+      await deleteTask(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  bot.action('updateTask', async (ctx) => {
+    try {
+      await ctx.answerCbQuery();
+      await isCompleted(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  bot.action('addGroup', async (ctx) => {
+    try {
+      await ctx.answerCbQuery();
+      await addGroup(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  bot.action('deleteGroup', async (ctx) => {
+    try {
+      await ctx.answerCbQuery();
+      await deleteGroup(ctx);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+}
 
 bot.launch().then(() => console.log('Bot has successfully started!'));
 
