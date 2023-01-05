@@ -24,6 +24,7 @@ const userLocalObj = {
   await connectDatabase();
   await setCommands();
   await setActions();
+  await bot.launch().then(() => console.log('Bot has successfully started!'));
 })();
 
 async function updateLocalData(ctx) {
@@ -59,22 +60,11 @@ async function myGroups(ctx) {
   });
   let groupList = '';
   for (let i = 0; i < groups.length; i++) {
-    if (i === userLocalObj.activeGroup) {
-      groupList += `${i + 1}. ${groups[i].groupName} 🟢\n`;
-    } else {
-      groupList += `${i + 1}. ${groups[i].groupName}\n`;
-    }
+    groupList += `${i + 1}. ${groups[i].groupName}`;
+    i === userLocalObj.activeGroup ? groupList += '🟢\n' : groupList += '\n';
   }
-  if (groupList === '') {
-    await ctx.replyWithHTML(
-      myConsts.myGroupsEmpty
-    );
-  } else {
-    await ctx.replyWithHTML(
-      myConsts.myGroups +
-      `${groupList}`
-    );
-  }
+  if (groupList === '') await ctx.replyWithHTML(myConsts.myGroupsEmpty);
+  else await ctx.replyWithHTML(myConsts.myGroups + `${groupList}`);
 }
 
 async function chooseGroup(ctx) {
@@ -88,6 +78,7 @@ async function addTask(ctx) {
   await ctx.reply(myConsts.addTask);
   userLocalObj.action = 'addTask';
 }
+
 async function myTasks(ctx) {
   await updateLocalData(ctx);
   if (userLocalObj.groups.length === 0) {
@@ -101,17 +92,11 @@ async function myTasks(ctx) {
   });
   let taskList = '';
   for (let i = 0; i < tasks.length; i++) {
-    if (tasks[i].isCompleted)  taskList += `${i + 1}. ${tasks[i].taskName} ✅\n`;
-    else taskList += `${i + 1}. ${tasks[i].taskName} 🔴\n`;
+    taskList += `${i + 1}. ${tasks[i].taskName}`;
+    tasks[i].isCompleted ? taskList += '✅\n' : taskList += '🔴\n';
   }
-  if (taskList === '') {
-    await ctx.replyWithHTML(myConsts.myTasksEmpty);
-  } else {
-    await ctx.replyWithHTML(
-      myConsts.myTasks +
-      `${taskList}`
-    );
-  }
+  if (taskList === '') await ctx.replyWithHTML(myConsts.myTasksEmpty);
+  else await ctx.replyWithHTML(myConsts.myTasks + `${taskList}`);
 }
 
 async function deleteGroup(ctx) {
@@ -173,12 +158,10 @@ async function deleteTaskAction(ctx) {
     } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
       await ctx.reply(myConsts.noChosenGroup);
       return;
-    }
-    if (Number.isNaN(userLocalObj.taskId)) {
+    } else if (Number.isNaN(userLocalObj.taskId)) {
       await ctx.reply(myConsts.notNumber);
       return;
-    }
-    if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
+    } else if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
       await ctx.reply(myConsts.noTask);
       return;
     }
@@ -221,8 +204,7 @@ async function chooseGroupAction(ctx) {
     if (Number.isNaN(userLocalObj.groupId)) {
       await ctx.reply(myConsts.notNumber);
       return;
-    }
-    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+    } else if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
       await ctx.reply(myConsts.noGroup);
       return;
     }
@@ -239,14 +221,12 @@ async function deleteGroupAction(ctx) {
     if (Number.isNaN(userLocalObj.groupId)) {
       await ctx.reply(myConsts.notNumber);
       return;
-    }
-    if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
+    } else if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
       await ctx.reply(myConsts.noGroup);
       return;
     }
     await ctx.replyWithHTML(
-      myConsts.isDeleteGroup +
-      `<i>${userLocalObj.groupId + 1}</i>`,
+      myConsts.isDeleteGroup + `<i>${userLocalObj.groupId + 1}</i>`,
       await yesNoKeyboard()
     );
   } else return;
@@ -291,6 +271,7 @@ async function addGroupCheck(ctx) {
 async function deleteGroupCheck(ctx) {
   if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteGroup') {
     userLocalObj.groups.splice(userLocalObj.groupId, 1);
+    if (userLocalObj.groupId < userLocalObj.activeGroup) userLocalObj.activeGroup--;
     await ctx.editMessageText(myConsts.successfullyDeleteGroup);
   } else return;
 }
@@ -519,8 +500,6 @@ async function setActions() {
     }
   });
 }
-
-bot.launch().then(() => console.log('Bot has successfully started!'));
 
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
