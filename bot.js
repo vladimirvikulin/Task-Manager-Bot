@@ -7,16 +7,8 @@ const {
 } = require('telegraf');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const { connectDatabase, users } = require('./db.js');
-const myConsts = require('./consts');
-let objDataBase;
-const userLocalObj = {
-  groups: [],
-  text: '',
-  taskId: 0,
-  groupId: 0,
-  action: '',
-  activeGroup: 0,
-};
+const { myConsts } = require('./consts.js');
+const localUsers = {};
 
 //Functions
 
@@ -24,13 +16,12 @@ const userLocalObj = {
   await connectDatabase();
   await setCommands();
   await setActions();
-  await bot.launch().then(() => console.log('Bot has successfully started!'));
+  await bot.launch();
+  console.log('Bot has successfully started!');
 })();
 
 async function updateLocalData(ctx) {
-  objDataBase = await users.find({ chatId: String(ctx.chat.id) });
-  userLocalObj.groups = objDataBase.groups;
-  userLocalObj.activeGroup = objDataBase.activeGroup;
+  localUsers[ctx.chat.id] = await users.findOne({ chatId: String(ctx.chat.id) });
 }
 
 async function updateDataBase(ctx) {
@@ -38,8 +29,8 @@ async function updateDataBase(ctx) {
     { chatId: String(ctx.chat.id) },
     {
       $set: {
-        groups: userLocalObj.groups,
-        activeGroup: userLocalObj.activeGroup
+        groups: localUsers[ctx.chat.id].groups,
+        activeGroup: localUsers[ctx.chat.id].activeGroup,
       }
     }
   );
@@ -48,73 +39,68 @@ async function updateDataBase(ctx) {
 async function addGroup(ctx) {
   await updateLocalData(ctx);
   await ctx.reply(myConsts.addGroup);
-  userLocalObj.action = 'addGroup';
+  localUsers[ctx.chat.id].action = 'addGroupAction';
 }
 
 async function myGroups(ctx) {
   await updateLocalData(ctx);
-  const groups = await new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(userLocalObj.groups);
-    }, 300);
+  const { groups, activeGroup } = localUsers[ctx.chat.id];
+  const groupList = groups.map((group, i) => {
+    const active = i === activeGroup ? '🟢' : '';
+    return `${i + 1}. ${group.groupName} ${active}`;
   });
-  let groupList = '';
-  for (let i = 0; i < groups.length; i++) {
-    groupList += `${i + 1}. ${groups[i].groupName}`;
-    i === userLocalObj.activeGroup ? groupList += '🟢\n' : groupList += '\n';
-  }
-  if (groupList === '') await ctx.replyWithHTML(myConsts.myGroupsEmpty);
-  else await ctx.replyWithHTML(myConsts.myGroups + `${groupList}`);
+  const result = groupList.length === 0 ?
+    myConsts.myGroupsEmpty :
+    myConsts.myGroups + `${groupList.join('\n')}`;
+  await ctx.replyWithHTML(result);
 }
 
 async function chooseGroup(ctx) {
+  await updateLocalData(ctx);
   await myGroups(ctx);
   await ctx.reply(myConsts.chooseGroup);
-  userLocalObj.action = 'chooseGroup';
+  localUsers[ctx.chat.id].action = 'chooseGroupAction';
 }
 
 async function addTask(ctx) {
   await updateLocalData(ctx);
   await ctx.reply(myConsts.addTask);
-  userLocalObj.action = 'addTask';
+  localUsers[ctx.chat.id].action = 'addTaskAction';
 }
 
 async function myTasks(ctx) {
   await updateLocalData(ctx);
-  if (userLocalObj.groups.length === 0) {
+  if (localUsers[ctx.chat.id].groups.length === 0) {
     await ctx.reply(myConsts.addGroupFirst);
     return;
   }
-  const tasks = await new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(userLocalObj.groups[userLocalObj.activeGroup].tasks);
-    }, 300);
+  const { tasks } = localUsers[ctx.chat.id].groups[localUsers[ctx.chat.id].activeGroup];
+  const taskList = tasks.map((task, i) => {
+    const completed = task.isCompleted ? '✅' : '🔴';
+    return `${i + 1}. ${task.taskName} ${completed}`;
   });
-  let taskList = '';
-  for (let i = 0; i < tasks.length; i++) {
-    taskList += `${i + 1}. ${tasks[i].taskName}`;
-    tasks[i].isCompleted ? taskList += '✅\n' : taskList += '🔴\n';
-  }
-  if (taskList === '') await ctx.replyWithHTML(myConsts.myTasksEmpty);
-  else await ctx.replyWithHTML(myConsts.myTasks + `${taskList}`);
+  const result = taskList.length === 0 ?
+    myConsts.myTasksEmpty :
+    myConsts.myTasks + `${taskList.join('\n')}`;
+  await ctx.replyWithHTML(result);
 }
 
 async function deleteGroup(ctx) {
   await updateLocalData(ctx);
   await ctx.replyWithHTML(myConsts.deleteGroup);
-  userLocalObj.action = 'deleteGroup';
+  localUsers[ctx.chat.id].action = 'deleteGroupAction';
 }
 
 async function deleteTask(ctx) {
   await updateLocalData(ctx);
   await ctx.replyWithHTML(myConsts.deleteTask);
-  userLocalObj.action = 'deleteTask';
+  localUsers[ctx.chat.id].action = 'deleteTaskAction';
 }
 
 async function isCompleted(ctx) {
   await updateLocalData(ctx);
   await ctx.replyWithHTML(myConsts.isCompleted);
-  userLocalObj.action = 'isCompleted';
+  localUsers[ctx.chat.id].action = 'isCompletedAction';
 }
 
 async function yesNoKeyboard() {
@@ -133,154 +119,162 @@ async function backToMenu(ctx) {
 }
 
 async function addTaskAction(ctx) {
-  userLocalObj.text = ctx.message.text;
-  if (userLocalObj.action === 'addTask') {
-    if (userLocalObj.groups.length === 0) {
-      await ctx.reply(myConsts.addGroupFirst);
-      return;
-    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
-      await ctx.reply(myConsts.noChosenGroup);
-      return;
-    }
-    await ctx.replyWithHTML(
-      myConsts.isAddTask + `<i>${ctx.message.text}</i>`,
-      await yesNoKeyboard()
-    );
-  } else return;
+  localUsers[ctx.chat.id].text = ctx.message.text;
+  const { groups, activeGroup, text } = localUsers[ctx.chat.id];
+  if (groups.length === 0) {
+    await ctx.reply(myConsts.addGroupFirst);
+    return;
+  } else if (activeGroup + 1 > groups.length) {
+    await ctx.reply(myConsts.noChosenGroup);
+    return;
+  }
+  await ctx.replyWithHTML(
+    myConsts.isAddTask + `<i>${text}</i>`,
+    await yesNoKeyboard()
+  );
 }
 
 async function deleteTaskAction(ctx) {
-  if (userLocalObj.action === 'deleteTask') {
-    userLocalObj.taskId = Number(ctx.message.text) - 1;
-    if (userLocalObj.groups.length === 0) {
-      await ctx.reply(myConsts.addGroupFirst);
-      return;
-    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
-      await ctx.reply(myConsts.noChosenGroup);
-      return;
-    } else if (Number.isNaN(userLocalObj.taskId)) {
-      await ctx.reply(myConsts.notNumber);
-      return;
-    } else if (userLocalObj.taskId + 1 > userLocalObj.groups[userLocalObj.activeGroup].tasks.length) {
-      await ctx.reply(myConsts.noTask);
-      return;
-    }
-    await ctx.replyWithHTML(
-      myConsts.isTaskDelete + `<i>${userLocalObj.taskId + 1}</i>`,
-      await yesNoKeyboard()
-    );
-  } else return;
+  localUsers[ctx.chat.id].taskId = Number(ctx.message.text) - 1;
+  const { taskId } = localUsers[ctx.chat.id];
+  if (WrongDataTask(ctx)) return;
+  await ctx.replyWithHTML(
+    myConsts.isTaskDelete + `<i>${taskId + 1}</i>`,
+    await yesNoKeyboard()
+  );
 }
 
 async function isCompletedAction(ctx) {
-  if (userLocalObj.action === 'isCompleted') {
-    userLocalObj.taskId = Number(ctx.message.text) - 1;
-    if (userLocalObj.groups.length === 0) {
-      ctx.reply(myConsts.addGroupFirst);
-      return;
-    } else if (userLocalObj.activeGroup + 1 > userLocalObj.groups.length) {
-      ctx.reply(myConsts.noChosenGroup);
-      return;
-    }
-    await ctx.replyWithHTML(
-      myConsts.isCompletedSure + `<i>${userLocalObj.taskId + 1}</i>`,
-      await yesNoKeyboard()
-    );
+  localUsers[ctx.chat.id].taskId = Number(ctx.message.text) - 1;
+  const { taskId } = localUsers[ctx.chat.id];
+  if (WrongDataTask(ctx)) return;
+  await ctx.replyWithHTML(
+    myConsts.isCompletedSure + `<i>${taskId + 1}</i>`,
+    await yesNoKeyboard()
+  );
+}
+
+function WrongDataTask(ctx) {
+  const { groups, activeGroup, taskId } = localUsers[ctx.chat.id];
+  if (groups.length === 0) {
+    ctx.reply(myConsts.addGroupFirst);
+    return true;
+  } else if (activeGroup + 1 > groups.length) {
+    ctx.reply(myConsts.noChosenGroup);
+    return true;
+  } else if (Number.isNaN(taskId)) {
+    ctx.reply(myConsts.notNumber);
+    return true;
+  }
+  const { tasks } = localUsers[ctx.chat.id].groups[localUsers[ctx.chat.id].activeGroup];
+  if (taskId + 1 > tasks.length) {
+    ctx.reply(myConsts.noTask);
+    return true;
   } else return;
 }
 
 async function addGroupAction(ctx) {
-  if (userLocalObj.action === 'addGroup') {
-    await ctx.replyWithHTML(
-      myConsts.isAddGroup + `<i>${userLocalObj.text}</i>`,
-      await yesNoKeyboard()
-    );
-  } else return;
+  localUsers[ctx.chat.id].text = ctx.message.text;
+  await ctx.replyWithHTML(
+    myConsts.isAddGroup + `<i>${localUsers[ctx.chat.id].text}</i>`,
+    await yesNoKeyboard()
+  );
 }
 
 async function chooseGroupAction(ctx) {
-  if (userLocalObj.action === 'chooseGroup') {
-    userLocalObj.groupId = Number(ctx.message.text) - 1;
-    if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply(myConsts.notNumber);
-      return;
-    } else if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply(myConsts.noGroup);
-      return;
-    }
-    userLocalObj.activeGroup = Number(ctx.message.text) - 1;
-    await ctx.reply(myConsts.successfullyChooseGroup);
-    await updateDataBase(ctx);
-    await myGroups(ctx);
-  } else return;
+  localUsers[ctx.chat.id].groupId = Number(ctx.message.text) - 1;
+  if (WrongDataGroup(ctx)) return;
+  localUsers[ctx.chat.id].activeGroup = Number(ctx.message.text) - 1;
+  await ctx.reply(myConsts.successfullyChooseGroup);
+  await updateDataBase(ctx);
+  await myGroups(ctx);
+  await backToMenu(ctx);
 }
 
 async function deleteGroupAction(ctx) {
-  if (userLocalObj.action === 'deleteGroup') {
-    userLocalObj.groupId = Number(ctx.message.text) - 1;
-    if (Number.isNaN(userLocalObj.groupId)) {
-      await ctx.reply(myConsts.notNumber);
-      return;
-    } else if (userLocalObj.groupId + 1 > userLocalObj.groups.length) {
-      await ctx.reply(myConsts.noGroup);
-      return;
-    }
-    await ctx.replyWithHTML(
-      myConsts.isDeleteGroup + `<i>${userLocalObj.groupId + 1}</i>`,
-      await yesNoKeyboard()
-    );
+  localUsers[ctx.chat.id].groupId = Number(ctx.message.text) - 1;
+  if (WrongDataGroup(ctx)) return;
+  await ctx.replyWithHTML(
+    myConsts.isDeleteGroup + `<i>${localUsers[ctx.chat.id].groupId + 1}</i>`,
+    await yesNoKeyboard()
+  );
+}
+
+function WrongDataGroup(ctx) {
+  const { groups, groupId } = localUsers[ctx.chat.id];
+  if (Number.isNaN(groupId)) {
+    ctx.reply(myConsts.notNumber);
+    return true;
+  } else if (groupId + 1 > groups.length) {
+    ctx.reply(myConsts.noGroup);
+    return true;
   } else return;
 }
 
 async function noAction(ctx) {
-  if (userLocalObj.action === '') {
-    await ctx.reply(myConsts.unknownCommand);
-  } else return;
+  await ctx.reply(myConsts.unknownCommand);
 }
 
 async function addTaskCheck(ctx) {
-  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addTask') {
-    userLocalObj.groups[userLocalObj.activeGroup].tasks.push({ taskName: userLocalObj.text, isCompleted: false });
-    await ctx.editMessageText(myConsts.successfullyAddTask);
-  } else return;
+  localUsers[ctx.chat.id]
+    .groups[localUsers[ctx.chat.id].activeGroup]
+    .tasks
+    .push({ taskName: localUsers[ctx.chat.id].text, isCompleted: false });
+  await ctx.editMessageText(myConsts.successfullyAddTask);
 }
 
 async function deleteTaskCheck(ctx) {
-  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteTask') {
-    userLocalObj.groups[userLocalObj.activeGroup].tasks.splice(userLocalObj.id, 1);
-    await ctx.editMessageText(myConsts.successfullyDeleteTask);
-  } else return;
+  localUsers[ctx.chat.id]
+    .groups[localUsers[ctx.chat.id].activeGroup]
+    .tasks
+    .splice(localUsers[ctx.chat.id].taskId, 1);
+  await ctx.editMessageText(myConsts.successfullyDeleteTask);
 }
 
 async function isCompletedCheck(ctx) {
-  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'isCompleted') {
-    let isCompleted = userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted;
-    isCompleted = !isCompleted;
-    userLocalObj.groups[userLocalObj.activeGroup].tasks[userLocalObj.taskId].isCompleted = isCompleted;
-    await ctx.editMessageText(myConsts.successfullyIsCompleted);
-  } else return;
+  let { isCompleted } = localUsers[ctx.chat.id]
+    .groups[localUsers[ctx.chat.id].activeGroup]
+    .tasks[localUsers[ctx.chat.id].taskId];
+  isCompleted = !isCompleted;
+  localUsers[ctx.chat.id]
+    .groups[localUsers[ctx.chat.id].activeGroup]
+    .tasks[localUsers[ctx.chat.id].taskId]
+    .isCompleted = isCompleted;
+  await ctx.editMessageText(myConsts.successfullyIsCompleted);
 }
 
 async function addGroupCheck(ctx) {
-  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'addGroup') {
-    userLocalObj.groups.push({ tasks: [], groupName: userLocalObj.text });
-    await ctx.editMessageText(myConsts.successfullyAddGroup);
-  } else return;
+  localUsers[ctx.chat.id]
+    .groups
+    .push({ tasks: [], groupName: localUsers[ctx.chat.id].text });
+  await ctx.editMessageText(myConsts.successfullyAddGroup);
 }
 
 async function deleteGroupCheck(ctx) {
-  if (ctx.callbackQuery.data === 'yes' && userLocalObj.action === 'deleteGroup') {
-    userLocalObj.groups.splice(userLocalObj.groupId, 1);
-    if (userLocalObj.groupId < userLocalObj.activeGroup) userLocalObj.activeGroup--;
-    await ctx.editMessageText(myConsts.successfullyDeleteGroup);
-  } else return;
+  localUsers[ctx.chat.id]
+    .groups
+    .splice(localUsers[ctx.chat.id].groupId, 1);
+  const { groupId, activeGroup } = localUsers[ctx.chat.id];
+  if (groupId < activeGroup) localUsers[ctx.chat.id].activeGroup--;
+  await ctx.editMessageText(myConsts.successfullyDeleteGroup);
 }
 
-async function actionNoCheck(ctx) {
-  if (ctx.callbackQuery.data === 'no') {
-    await ctx.deleteMessage();
-  } else return;
-}
+const actions = {
+  addGroupAction,
+  deleteGroupAction,
+  chooseGroupAction,
+  addTaskAction,
+  deleteTaskAction,
+  isCompletedAction,
+  noAction,
+};
+const checks = {
+  addTaskAction: addTaskCheck,
+  deleteTaskAction: deleteTaskCheck,
+  isCompletedAction: isCompletedCheck,
+  addGroupAction: addGroupCheck,
+  deleteGroupAction: deleteGroupCheck,
+};
 
 //Commands
 
@@ -288,11 +282,15 @@ async function setCommands() {
 
   bot.start(async (ctx) => {
     await ctx.reply(`${myConsts.start(ctx)}`);
-    const userExists = await users.find({ username: ctx.message.from.username });
+    const userExists = await users.findOne({ chatId: String(ctx.chat.id) });
     if (userExists === null) {
       users.create({ username: `${ctx.message.from.username}`,
         chatId: `${ctx.chat.id}`,
         activeGroup: 0,
+        taskId: 0,
+        groupId: 0,
+        text: '',
+        action: 'noAction',
         groups: [] });
     }
   });
@@ -364,11 +362,19 @@ async function setCommands() {
   });
 
   bot.command('time', async (ctx) => {
-    await ctx.reply(String(new Date()));
+    try {
+      await ctx.reply(String(new Date()));
+    } catch (e) {
+      console.log(e);
+    }
   });
 
   bot.command('info', async (ctx) => {
-    ctx.reply(myConsts.info);
+    try {
+      await ctx.reply(myConsts.info);
+    } catch (e) {
+      console.log(e);
+    }
   });
 
   bot.command('menu', async (ctx) => {
@@ -383,13 +389,11 @@ async function setCommands() {
   });
 
   bot.on('text', async (ctx) => {
-    await addTaskAction(ctx);
-    await deleteTaskAction(ctx);
-    await isCompletedAction(ctx);
-    await addGroupAction(ctx);
-    await chooseGroupAction(ctx);
-    await deleteGroupAction(ctx);
-    await noAction(ctx);
+    try {
+      await actions[localUsers[ctx.chat.id].action](ctx);
+    } catch (e) {
+      console.log(e);
+    }
   });
 }
 
@@ -398,16 +402,16 @@ async function setCommands() {
 async function setActions() {
 
   bot.action(['yes', 'no'], async (ctx) => {
-    await ctx.answerCbQuery();
-    await addTaskCheck(ctx);
-    await deleteTaskCheck(ctx);
-    await isCompletedCheck(ctx);
-    await addGroupCheck(ctx);
-    await deleteGroupCheck(ctx);
-    await actionNoCheck(ctx);
-    await backToMenu(ctx);
-    await updateDataBase(ctx);
-    userLocalObj.action = '';
+    try {
+      await ctx.answerCbQuery();
+      if (ctx.callbackQuery.data === 'yes') {
+        await checks[localUsers[ctx.chat.id].action](ctx);
+      } else await ctx.deleteMessage();
+      await backToMenu(ctx);
+      await updateDataBase(ctx);
+    } catch (e) {
+      console.log(e);
+    }
   });
 
   bot.action('menu', async (ctx) => {
