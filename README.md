@@ -16,7 +16,13 @@ $ npm install
 
 Configuration file should be named as `.env`, example is named as `.env.example`
 
-3. Run
+3. Create collection
+
+```bash
+$ node createCollection.js
+```
+
+4. Run
 
 ```bash
 $ npm run dev
@@ -36,6 +42,6 @@ $ npm run dev
 /myGroups - View your groups  
 /addGroup - Add group  
 /deleteGroup - Delete group  
-/date - View time  
+/time - View time  
 
 
